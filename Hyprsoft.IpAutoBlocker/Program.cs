@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 [assembly: InternalsVisibleTo("Hyprsoft.Cloud.Utilities.Tests")]
 namespace Hyprsoft.IpAutoBlocker
 {
-    /* Wndows 10 IoT Core Startup
+    /* Wndows IoT Core Startup
     schtasks /create /tn "Hyprsoft IP Auto Blocker" /tr c:\hyprsoft\ipautoblocker\Hyprsoft.IpAutoBlocker.Monitor.exe /sc onstart /ru DefaultAccount
     schtasks /delete /f /tn "Hyprsoft IP Auto Blocker"
     */
@@ -27,7 +27,6 @@ namespace Hyprsoft.IpAutoBlocker
         private const string AppSettingsFilename = "appsettings.json";
         private const string DataProtectionApplicationName = "Hyprsoft.IpRestrictions.Monitor";
 
-        private static AppSettings _settings = new AppSettings();
         private static ILoggerFactory _loggerFactory;
 
         #endregion
@@ -45,33 +44,34 @@ namespace Hyprsoft.IpAutoBlocker
                 var version = (((AssemblyInformationalVersionAttribute)typeof(Program).Assembly.GetCustomAttribute(typeof(AssemblyInformationalVersionAttribute))).InformationalVersion);
                 logger.LogInformation($"{product} v{version}");
 
+                var settings = new AppSettings();
                 var settingsFilename = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), AppSettingsFilename).ToLower();
                 if (File.Exists(settingsFilename))
                 {
                     logger.LogInformation($"Loading app settings from '{settingsFilename}'.");
-                    _settings = JsonConvert.DeserializeObject<AppSettings>(await File.ReadAllTextAsync(settingsFilename));
+                    settings = JsonConvert.DeserializeObject<AppSettings>(await File.ReadAllTextAsync(settingsFilename));
                 }
                 else
-                    await File.WriteAllTextAsync(settingsFilename, JsonConvert.SerializeObject(_settings));
+                    await File.WriteAllTextAsync(settingsFilename, JsonConvert.SerializeObject(settings, Formatting.Indented));
 
-                if (!_settings.IpAutoBlockerSettings.IsValid() || !_settings.FtpHttpLogProviderSettings.IsValid())
+                if (!settings.IpAutoBlockerSettings.IsValid() || !settings.FtpHttpLogProviderSettings.IsValid())
                     throw new InvalidOperationException($"The '{settingsFilename}' file is missing some settings.  The following settings are required: {nameof(IpAutoBlockerSettings.ClientId)}, " +
                         $"{nameof(IpAutoBlockerSettings.ClientSecret)}, {nameof(IpAutoBlockerSettings.Tenant)}, {nameof(IpAutoBlockerSettings.SubscriptionId)}, " +
                         $"{nameof(IpAutoBlockerSettings.WebsiteName)}, {nameof(FtpHttpLogProviderSettings.Host)}, {nameof(FtpHttpLogProviderSettings.Username)}, " +
                         $"{nameof(FtpHttpLogProviderSettings.Password)}, {nameof(FtpHttpLogProviderSettings.LogsFolder)}.");
 
                 // Encrypt our sensitive settings if this is our first run.
-                if (_settings.FirstRun)
+                if (settings.FirstRun)
                 {
                     logger.LogWarning("First run detected.  Encrypting sensitive settings.");
-                    _settings.IpAutoBlockerSettings.ClientSecret = EncryptString(_settings.IpAutoBlockerSettings.ClientSecret);
-                    _settings.FtpHttpLogProviderSettings.Password = EncryptString(_settings.FtpHttpLogProviderSettings.Password);
-                    _settings.FirstRun = false;
+                    settings.IpAutoBlockerSettings.ClientSecret = EncryptString(settings.IpAutoBlockerSettings.ClientSecret);
+                    settings.FtpHttpLogProviderSettings.Password = EncryptString(settings.FtpHttpLogProviderSettings.Password);
+                    settings.FirstRun = false;
                     logger.LogInformation($"Saving app settings to '{settingsFilename}'.");
-                    await File.WriteAllTextAsync(settingsFilename, JsonConvert.SerializeObject(_settings, Formatting.Indented));
+                    await File.WriteAllTextAsync(settingsFilename, JsonConvert.SerializeObject(settings, Formatting.Indented));
                 }   // First run?
-                _settings.IpAutoBlockerSettings.ClientSecret = DecryptString(_settings.IpAutoBlockerSettings.ClientSecret);
-                _settings.FtpHttpLogProviderSettings.Password = DecryptString(_settings.FtpHttpLogProviderSettings.Password);
+                settings.IpAutoBlockerSettings.ClientSecret = DecryptString(settings.IpAutoBlockerSettings.ClientSecret);
+                settings.FtpHttpLogProviderSettings.Password = DecryptString(settings.FtpHttpLogProviderSettings.Password);
 
                 using (var cts = new CancellationTokenSource())
                 {
@@ -82,9 +82,9 @@ namespace Hyprsoft.IpAutoBlocker
                         e.Cancel = true;
                     };
 
-                    using (var blocker = new Cloud.Utilities.Azure.IpAutoBlocker(_loggerFactory.CreateLogger<Cloud.Utilities.Azure.IpAutoBlocker>(), _settings.IpAutoBlockerSettings)
+                    using (var blocker = new Cloud.Utilities.Azure.IpAutoBlocker(_loggerFactory.CreateLogger<Cloud.Utilities.Azure.IpAutoBlocker>(), settings.IpAutoBlockerSettings)
                     {
-                        HttpLogProvider = new FtpHttpLogProvider(_settings.FtpHttpLogProviderSettings)
+                        HttpLogProvider = new FtpHttpLogProvider(settings.FtpHttpLogProviderSettings)
                     })
                     {
                         while (!cts.Token.IsCancellationRequested)
@@ -92,7 +92,7 @@ namespace Hyprsoft.IpAutoBlocker
                             try
                             {
                                 await blocker.RunAsync(cts.Token);
-                                logger.LogInformation($"Sync completed successfully.  Next check at '{DateTime.Now.Add(_settings.CheckInterval)}'.");
+                                logger.LogInformation($"Sync completed successfully.  Next check at '{DateTime.Now.Add(settings.CheckInterval)}'.");
                             }
                             catch (TaskCanceledException)
                             {
@@ -101,7 +101,7 @@ namespace Hyprsoft.IpAutoBlocker
                             {
                                 logger.LogError(ex, $"Unexpected runtime error.  Details: {ex.Message}");
                             }
-                            await Task.Delay(_settings.CheckInterval, cts.Token);
+                            await Task.Delay(settings.CheckInterval, cts.Token);
                         }   // cancellation pending while loop
                     }   // using IP restrictions manager
                 }   // using cancellation token source.
