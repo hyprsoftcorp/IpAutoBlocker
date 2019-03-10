@@ -1,0 +1,48 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.438
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hyprsoft.Cloud.Utilities", "Hyprsoft.Cloud.Utilities\Hyprsoft.Cloud.Utilities.csproj", "{6018CF60-FB1F-462C-992F-CC696A982EE6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hyprsoft.Cloud.Utilities.Tests", "Hyprsoft.Cloud.Utilities.Tests\Hyprsoft.Cloud.Utilities.Tests.csproj", "{B878AB14-94DB-4436-BC66-F56FED1A37CF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hyprsoft.IpAutoBlocker", "Hyprsoft.IpAutoBlocker\Hyprsoft.IpAutoBlocker.csproj", "{CE5EE9C9-F868-484F-B5A9-4A46C20672F9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hyprsoft.IpAutoBlocker.Cloud", "Hyprsoft.IpAutoBlocker.Cloud\Hyprsoft.IpAutoBlocker.Cloud.csproj", "{5492F978-9A60-4D52-9075-A4144FEB9AB6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{DDD0A304-7C38-481F-A903-32871629C61F}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6018CF60-FB1F-462C-992F-CC696A982EE6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6018CF60-FB1F-462C-992F-CC696A982EE6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6018CF60-FB1F-462C-992F-CC696A982EE6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6018CF60-FB1F-462C-992F-CC696A982EE6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B878AB14-94DB-4436-BC66-F56FED1A37CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B878AB14-94DB-4436-BC66-F56FED1A37CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B878AB14-94DB-4436-BC66-F56FED1A37CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B878AB14-94DB-4436-BC66-F56FED1A37CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE5EE9C9-F868-484F-B5A9-4A46C20672F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE5EE9C9-F868-484F-B5A9-4A46C20672F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE5EE9C9-F868-484F-B5A9-4A46C20672F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE5EE9C9-F868-484F-B5A9-4A46C20672F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5492F978-9A60-4D52-9075-A4144FEB9AB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5492F978-9A60-4D52-9075-A4144FEB9AB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5492F978-9A60-4D52-9075-A4144FEB9AB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5492F978-9A60-4D52-9075-A4144FEB9AB6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {28C065C8-E4C9-43EA-9B15-1A7D63CF6FFF}
+	EndGlobalSection
+EndGlobal

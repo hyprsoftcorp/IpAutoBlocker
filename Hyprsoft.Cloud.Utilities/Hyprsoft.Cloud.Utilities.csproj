@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Authors>Hyprsoft Corporation</Authors>
+    <Product>Hyprsoft Cloud Utilites</Product>
+    <Description>Hyprsoft Cloud Utilites</Description>
+    <Copyright>Copyright © 2019 by Hyprsoft Corporation</Copyright>
+    <PackageProjectUrl>http://www.hyprsoft.com/</PackageProjectUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentFTP" Version="23.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+  </ItemGroup>
+
+</Project>
