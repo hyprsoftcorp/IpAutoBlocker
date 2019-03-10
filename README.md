@@ -1,5 +1,5 @@
 # IP Auto Blocker
-Automatically adds Azure App Service network access restrictions based on customizable filtering of standard HTTP server web logs.  By default the library is configured to add an Azure App Service access restriction rule for each IP address that exceeds 25 404s in a 24 hour period.  The "rules" are user configurable.
+Automatically adds Azure App Service network access restrictions based on customizable filtering of standard HTTP server web logs.  By default, the library is configured to add an Azure App Service access restriction rule for each IP address that exceeds 25 404s in a 24-hour period.  The "rules" are user configurable.
 
 ## Process Overview
 The library periodically performs the following functions:
@@ -18,13 +18,13 @@ Setting | Sample Value | Description
 --- | --- | ---
 IpAutoBlockerSettings:ClientId | 8a171fc2-f71f-4eb3-95fd-e4e5da70f8d2 | Azure service principal client identifier.
 IpAutoBlockerSettings:ClientSecret | cl13ntS3cr3t | Azure service principal client secret.
-IpAutoBlockerSettings:Tenant | {edb1b40-6058-439e-a656-46d8d02c4645 | Azure tenant.
+IpAutoBlockerSettings:Tenant | edb1b40-6058-439e-a656-46d8d02c4645 | Azure tenant.
 IpAutoBlockerSettings:SubscriptionId | 29abab24-250f-4227-adcc-ab81b84ae9df | Azure subscription id where website resides.
 IpAutoBlockerSettings:WebsiteName | mywebsite | Azure app service name.
 FtpHttpLogProviderSettings:Host | waws-prod-bay-011.ftp.azurewebsites.windows.net | FTP host where HTTP logs reside.
-FtpHttpLogProviderSettings:Username | mywebsite\$mywebsite | FTP username.
+FtpHttpLogProviderSettings:Username | mywebsite\\$mywebsite | FTP username.
 FtpHttpLogProviderSettings:Password | ftpp@ssw0rd | FTP password.
-FtpHttpLogProviderSettings:LogsFolder | /LogFiles/http/RawLogs | FTP path where HTTP logs reside.
+FtpHttpLogProviderSettings:LogsFolder | /LogFiles/http/RawLogs | FTP remote path where HTTP logs reside.
 
 ## Implementations
 ### Azure Function Sample
@@ -60,7 +60,7 @@ public static async Task Run([TimerTrigger("0 0 */8 * * *", RunOnStartup = true)
 }
 ```
 ### Console App Sample
-See the full console app source code for details.
+See the full console app [source code](https://github.com/hyprsoftcorp/IpAutoBlocker/blob/master/Hyprsoft.IpAutoBlocker/Program.cs) for details.
 ```csharp
 static async Task Main(string[] args)
 {

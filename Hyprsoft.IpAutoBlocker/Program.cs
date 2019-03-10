@@ -18,18 +18,6 @@ namespace Hyprsoft.IpAutoBlocker
     /* Wndows 10 IoT Core Startup
     schtasks /create /tn "Hyprsoft IP Auto Blocker" /tr c:\hyprsoft\ipautoblocker\Hyprsoft.IpAutoBlocker.Monitor.exe /sc onstart /ru DefaultAccount
     schtasks /delete /f /tn "Hyprsoft IP Auto Blocker"
-*/
-
-    /*  Setup user secrets file            
-    Edit .csproj and add (with new GUID):
-    <PropertyGroup>
-         <UserSecretsId>42FD70AA-14B3-4845-91D4-FAB3E3292FF7</UserSecretsId>
-    </PropertyGroup>
-
-    Command prompt:
-        1. cd to project folder.
-        2. dotnet user-secrets set this that
-        3. Open/edit %APPDATA%\microsoft\UserSecrets\42FD70AA-14B3-4845-91D4-FAB3E3292FF7\secrets.json
     */
 
     class Program
