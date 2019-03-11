@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hyprsoft.Cloud.Utilities.Azure;
@@ -37,7 +38,8 @@ namespace Hyprsoft.IpAutoBlocker.Cloud
                     Username = config["Values:FtpHttpLogProviderSettings:Username"],
                     Password = config["Values:FtpHttpLogProviderSettings:Password"],
                     LogsFolder = config["Values:FtpHttpLogProviderSettings:LogsFolder"]
-                })
+                }),
+                CacheItemsToIpRestictionsFilter = items => items.Where(x => x.Value >= 15)
             };
             await blocker.RunAsync(token);
 

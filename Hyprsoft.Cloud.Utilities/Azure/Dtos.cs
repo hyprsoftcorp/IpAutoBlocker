@@ -52,7 +52,7 @@ namespace Hyprsoft.Cloud.Utilities.Azure
 
         public override string ToString()
         {
-            return $"IP: {IpAddress}\n\tName: {Name}\n\tAction: {Action}\n\tPriority: {Priority}\n\tTag: {Tag}";
+            return $"IP: {IpAddress}\n\tName: {Name}\n\tAction: {Action}\n\tPriority: {Priority}";
         }
     }
 }

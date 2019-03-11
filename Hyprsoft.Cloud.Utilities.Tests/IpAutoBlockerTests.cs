@@ -56,22 +56,24 @@ namespace Hyprsoft.Cloud.Utilities.Tests
                 var ipRestrictionsProvider = new UnitTestIpRestictionsProvider();
                 blocker.IpRestrictionsProvider = ipRestrictionsProvider;
                 Assert.IsNotNull(blocker.IpRestrictionsProvider.Logger);
-                Assert.AreEqual(2, ipRestrictionsProvider.Restrictions.Count);
+                Assert.AreEqual(0, ipRestrictionsProvider.Restrictions.Count);
 
                 // By default our IP restrictions are synched every 24 hours, let's force a sync.
                 blocker.SyncInterval = TimeSpan.FromTicks(1);
                 blocker.CacheItemsToIpRestictionsFilter = items => items.Where(x => x.Value >= 3);
                 await blocker.RunAsync();
 
-                Assert.AreEqual(1, ipRestrictionsProvider.Restrictions.Count());    // 404s
-                Assert.AreEqual(1, ipRestrictionsProvider.Restrictions.Where(x => x.IpAddress == $"4.4.4.4{AppServiceIpRestrictionsProvider.IpAddressBlockSuffix}").Count());
+                Assert.AreEqual(4, ipRestrictionsProvider.Restrictions.Count);  // should include default allow all rule.
+                Assert.AreEqual(1, ipRestrictionsProvider.Restrictions.Where(x => x.IpAddress == $"1.1.1.1{AppServiceIpRestrictionsProvider.IpAddressCidrBlockSuffix}").Count());
+                Assert.AreEqual(1, ipRestrictionsProvider.Restrictions.Where(x => x.IpAddress == $"2.2.2.2{AppServiceIpRestrictionsProvider.IpAddressCidrBlockSuffix}").Count());
+                Assert.AreEqual(1, ipRestrictionsProvider.Restrictions.Where(x => x.IpAddress == $"4.4.4.4{AppServiceIpRestrictionsProvider.IpAddressCidrBlockSuffix}").Count());
 
                 blocker.LogEntriesToCacheFilter = entries => entries.Where(x => x.Status == HttpStatusCode.OK);
                 await blocker.RunAsync();
 
-                Assert.AreEqual(2, ipRestrictionsProvider.Restrictions.Count());    // 200s
-                Assert.AreEqual(1, ipRestrictionsProvider.Restrictions.Where(x => x.IpAddress == $"3.3.3.3{AppServiceIpRestrictionsProvider.IpAddressBlockSuffix}").Count());
-                Assert.AreEqual(1, ipRestrictionsProvider.Restrictions.Where(x => x.IpAddress == $"5.5.5.5{AppServiceIpRestrictionsProvider.IpAddressBlockSuffix}").Count());
+                Assert.AreEqual(6, ipRestrictionsProvider.Restrictions.Count);  // should include default allow all rule.
+                for (int i = 1; i <= 5; i++)
+                    Assert.AreEqual(1, ipRestrictionsProvider.Restrictions.Where(x => x.IpAddress == $"{i}.{i}.{i}.{i}{AppServiceIpRestrictionsProvider.IpAddressCidrBlockSuffix}").Count());
             }   // using blocker
         }
 

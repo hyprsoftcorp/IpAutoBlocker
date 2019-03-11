@@ -10,6 +10,7 @@ using System.IO;
 using System.Reflection;
 using System.Net.Http;
 using Hyprsoft.Cloud.Utilities.HttpLogs;
+using System.Linq.Expressions;
 
 [assembly: InternalsVisibleTo("Hyprsoft.Cloud.Utilities.Tests")]
 namespace Hyprsoft.Cloud.Utilities.Azure
@@ -25,7 +26,6 @@ namespace Hyprsoft.Cloud.Utilities.Azure
         private HttpLogProvider _httpLogProvider;
         private IpRestrictionsProvider _ipRestrictionsProvider;
         private HttpTrafficCache _httpTrafficCache = new HttpTrafficCache();
-        private List<IpRestriction> _ipRestrictions;
         private HttpClient _httpClient = new HttpClient { BaseAddress = new Uri("https://api.ipify.org/") };
 
         #endregion
@@ -73,9 +73,9 @@ namespace Hyprsoft.Cloud.Utilities.Azure
 
         public TimeSpan SyncInterval { get; set; } = TimeSpan.FromDays(1);
 
-        public Func<IEnumerable<HttpLogEntry>, IEnumerable<HttpLogEntry>> LogEntriesToCacheFilter { get; set; } = entries => entries.Where(x => x.Status == HttpStatusCode.NotFound);
+        public Expression<Func<IEnumerable<HttpLogEntry>, IEnumerable<HttpLogEntry>>> LogEntriesToCacheFilter { get; set; } = entries => entries.Where(entry => entry.Status == HttpStatusCode.NotFound);
 
-        public Func<Dictionary<string, int>, IEnumerable<KeyValuePair<string, int>>> CacheItemsToIpRestictionsFilter { get; set; } = items => items.Where(x => x.Value >= 25);
+        public Expression<Func<Dictionary<string, int>, IEnumerable<KeyValuePair<string, int>>>> CacheItemsToIpRestictionsFilter { get; set; } = items => items.Where(item => item.Value >= 25);
 
         #endregion
 
@@ -83,16 +83,24 @@ namespace Hyprsoft.Cloud.Utilities.Azure
 
         public async Task RunAsync(CancellationToken token = default(CancellationToken))
         {
-            _logger.LogInformation($"Syncing IP restrictions using HTTP log provider '{HttpLogProvider.GetType().Name}' and IP restrictions provider '{IpRestrictionsProvider.GetType().Name}' for Azure Web App '{_settings.WebsiteName}'.");
+            _logger.LogInformation($"IP Auto Blocker running using:\n\t" +
+                $"HTTP Log Provider: '{HttpLogProvider.GetType().Name}'\n\t" +
+                $"IP Restrictions Provider: '{IpRestrictionsProvider.GetType().Name}'\n\t" +
+                $"Azure Web App: '{_settings.WebsiteName}'\n\t" +
+                $"Logs Filter: '{LogEntriesToCacheFilter.ToString()}'\n\t" +
+                $"Cache Filter: '{CacheItemsToIpRestictionsFilter.ToString()}'\n\t" +
+                $"Sync Interval: '{SyncInterval.TotalHours}' hours.");
 
-            _ipRestrictions = await IpRestrictionsProvider.GetRestrictionsAsync(token).ConfigureAwait(false);
-            _logger.LogInformation($"Found '{_ipRestrictions.Count()}' existing IP restrictions.");
+            if (!IpRestrictionsProvider.IsInitialized)
+                await IpRestrictionsProvider.InitializeAsync(token).ConfigureAwait(false);
+            await IpRestrictionsProvider.LoadAsync(token).ConfigureAwait(false);
+            _logger.LogInformation($"Found '{IpRestrictionsProvider.Restrictions.Count}' existing IP restrictions.");
 
             if (!_httpTrafficCache.IsLoaded)
             {
                 _logger.LogInformation("Loading HTTP traffic cache.");
                 _httpTrafficCache.Load();
-                _logger.LogInformation($"Found '{_httpTrafficCache.Cache.Entries.Count}' HTTP traffic cache items.");
+                _logger.LogInformation($"Found '{_httpTrafficCache.Cache.Entries.Count}' HTTP traffic cache items last synced at '{_httpTrafficCache.Cache.LastSyncedUtc.ToLocalTime()}'.");
             }
 
             var entries = await HttpLogProvider.GetEntriesAsync(token).ConfigureAwait(false);
@@ -116,7 +124,7 @@ namespace Hyprsoft.Cloud.Utilities.Azure
         private async Task UpdateHttpTrafficCacheAsync(IEnumerable<HttpLogEntry> entries)
         {
             var myIp = await _httpClient.GetStringAsync("/").ConfigureAwait(false);
-            var entiresToCache = LogEntriesToCacheFilter.Invoke(entries).Where(x => x.IpAddress != myIp);
+            var entiresToCache = LogEntriesToCacheFilter.Compile().Invoke(entries).Where(x => x.IpAddress != myIp);
             _logger.LogInformation($"Updating HTTP traffic cache with '{entiresToCache.Count()}' HTTP log entries (excludes traffic for '{myIp}').");
             foreach (var entry in entiresToCache)
             {
@@ -124,7 +132,7 @@ namespace Hyprsoft.Cloud.Utilities.Azure
                     _httpTrafficCache.Cache.Entries.Add(entry.IpAddress, 0);
 
                 _httpTrafficCache.Cache.Entries[entry.IpAddress]++;
-                _logger.LogDebug($"IP address '{entry.IpAddress}' count is '{_httpTrafficCache.Cache.Entries[entry.IpAddress]}'.");
+                _logger.LogInformation($"IP address '{entry.IpAddress}' count is '{_httpTrafficCache.Cache.Entries[entry.IpAddress]}'.");
             }   // for each http log entry
 
             _logger.LogInformation("Saving HTTP traffic cache.");
@@ -136,33 +144,33 @@ namespace Hyprsoft.Cloud.Utilities.Azure
             if (_httpTrafficCache.Cache.LastSyncedUtc.Add(SyncInterval) > DateTime.UtcNow)
                 return;
 
-            var items = CacheItemsToIpRestictionsFilter.Invoke(_httpTrafficCache.Cache.Entries).ToList();
+            var items = CacheItemsToIpRestictionsFilter.Compile().Invoke(_httpTrafficCache.Cache.Entries).ToList();
             _logger.LogInformation($"Found '{items.Count}' HTTP traffic cache items to create IP restrictions for.");
 
             if (items.Count > 0)
             {
+                var anyNewRestictions = false;
                 // Add new IP restrictions for any IP address matching our CacheItemsToIpRestictionsFilter in the last SyncInterval.
-                var newRestrictions = new List<IpRestriction>();
                 foreach (var item in items)
                 {
                     // Skip any IP address that already has a restriction.
-                    if (_ipRestrictions.Any(x => x.IpAddress == $"{item.Key}{AppServiceIpRestrictionsProvider.IpAddressBlockSuffix}"))
+                    if (IpRestrictionsProvider.Restrictions.Any(x => x.IpAddress == $"{item.Key}{AppServiceIpRestrictionsProvider.IpAddressCidrBlockSuffix}"))
                         continue;
 
                     var restriction = new IpRestriction
                     {
-                        IpAddress = $"{item.Key}{AppServiceIpRestrictionsProvider.IpAddressBlockSuffix}",
+                        IpAddress = $"{item.Key}{AppServiceIpRestrictionsProvider.IpAddressCidrBlockSuffix}",
                         Action = "Deny",
                         Priority = 1,
                         Name = "Block"
                     };
                     _logger.LogInformation($"Adding new IP restriction for '{restriction.IpAddress}' with action '{restriction.Action}'.");
-                    newRestrictions.Add(restriction);
-                    _ipRestrictions.Add(restriction);
+                    IpRestrictionsProvider.Restrictions.Add(restriction);
+                    anyNewRestictions = true;
                 }   // for each ip restriction
 
-                if (newRestrictions.Count > 0)
-                    await IpRestrictionsProvider.AddRestrictionsAsync(newRestrictions, token).ConfigureAwait(false);
+                if (anyNewRestictions)
+                    await IpRestrictionsProvider.SaveAsync(token).ConfigureAwait(false);
             }   // any new IP restrictions?
 
             _httpTrafficCache.Cache.LastSyncedUtc = DateTime.UtcNow;
