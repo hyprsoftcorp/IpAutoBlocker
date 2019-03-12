@@ -42,38 +42,57 @@ namespace Hyprsoft.Cloud.Utilities.Tests
                 WebsiteName = "MyWebSite"
             }))
             {
+                // Make sure we start with a fresh cache.
+                await blocker.ClearHttpTrafficCacheAsync();
+
+                // Defaults
                 Assert.AreEqual(typeof(LocalHttpLogProvider), blocker.HttpLogProvider.GetType());
                 Assert.AreEqual(typeof(AppServiceIpRestrictionsProvider), blocker.IpRestrictionsProvider.GetType());
                 Assert.AreEqual(TimeSpan.FromDays(1), blocker.SyncInterval);
-                Assert.IsNotNull(blocker.LogEntriesToCacheFilter);
-                Assert.IsNotNull(blocker.CacheItemsToIpRestictionsFilter);
 
-                var logProvider = new UnitTestHttpLogProvider();
-                blocker.HttpLogProvider = logProvider;
+                blocker.HttpLogProvider = new UnitTestHttpLogProvider();
                 Assert.IsNotNull(blocker.HttpLogProvider.Logger);
-                Assert.AreEqual(9, logProvider.Entries.Count);
 
-                var ipRestrictionsProvider = new UnitTestIpRestictionsProvider();
-                blocker.IpRestrictionsProvider = ipRestrictionsProvider;
+                blocker.IpRestrictionsProvider = new UnitTestIpRestictionsProvider();
                 Assert.IsNotNull(blocker.IpRestrictionsProvider.Logger);
-                Assert.AreEqual(0, ipRestrictionsProvider.Restrictions.Count);
+                Assert.AreEqual(0, blocker.IpRestrictionsProvider.Restrictions.Count);
 
-                // By default our IP restrictions are synched every 24 hours, let's force a sync.
+                // This should place 4.4.4.4 in our cache with a count of 3.
+                blocker.HttpTrafficCacheFilter = items => items.Where(x => x.Value >= 3);
+                // Our default sync interval is 24-hours, so no sync should be performed on this run (meaning no new IP restrictions).
+                var summary = await blocker.RunAsync();
+
+                Assert.AreEqual(blocker.HttpLogsFilter.ToString(), summary.HttpLogsFilter);
+                Assert.AreEqual(blocker.HttpTrafficCacheFilter.ToString(), summary.HttpTrafficCacheFilter);
+                Assert.AreEqual(9, summary.NewHttpLogEntries);
+
+                Assert.AreEqual(1, summary.HttpTrafficeCache.Count());
+                Assert.AreEqual(1, summary.HttpTrafficeCache.Where(x => x.Key == "4.4.4.4" && x.Value == 3).Count());
+                Assert.AreEqual(2, summary.Restrictions.Count());
+                Assert.AreEqual(1, summary.Restrictions.Where(x => x.IpAddress == $"1.1.1.1{AppServiceIpRestrictionsProvider.IpAddressCidrBlockSuffix}" && !x.IsNew).Count());
+                Assert.AreEqual(1, summary.Restrictions.Where(x => x.IpAddress == $"2.2.2.2{AppServiceIpRestrictionsProvider.IpAddressCidrBlockSuffix}" && !x.IsNew).Count());
+
+                // Force a sync.
                 blocker.SyncInterval = TimeSpan.FromTicks(1);
-                blocker.CacheItemsToIpRestictionsFilter = items => items.Where(x => x.Value >= 3);
-                await blocker.RunAsync();
+                blocker.HttpLogsFilter = entries => entries.Where(x => x.Status == HttpStatusCode.OK);
+                summary = await blocker.RunAsync();
 
-                Assert.AreEqual(4, ipRestrictionsProvider.Restrictions.Count);  // should include default allow all rule.
-                Assert.AreEqual(1, ipRestrictionsProvider.Restrictions.Where(x => x.IpAddress == $"1.1.1.1{AppServiceIpRestrictionsProvider.IpAddressCidrBlockSuffix}").Count());
-                Assert.AreEqual(1, ipRestrictionsProvider.Restrictions.Where(x => x.IpAddress == $"2.2.2.2{AppServiceIpRestrictionsProvider.IpAddressCidrBlockSuffix}").Count());
-                Assert.AreEqual(1, ipRestrictionsProvider.Restrictions.Where(x => x.IpAddress == $"4.4.4.4{AppServiceIpRestrictionsProvider.IpAddressCidrBlockSuffix}").Count());
+                Assert.AreEqual(9, summary.NewHttpLogEntries);
 
-                blocker.LogEntriesToCacheFilter = entries => entries.Where(x => x.Status == HttpStatusCode.OK);
-                await blocker.RunAsync();
+                Assert.AreEqual(3, summary.HttpTrafficeCache.Count());
+                Assert.AreEqual(1, summary.HttpTrafficeCache.Where(x => x.Key == "3.3.3.3" && x.Value == 3).Count());
+                Assert.AreEqual(1, summary.HttpTrafficeCache.Where(x => x.Key == "4.4.4.4" && x.Value == 3).Count());
+                Assert.AreEqual(1, summary.HttpTrafficeCache.Where(x => x.Key == "5.5.5.5" && x.Value == 3).Count());
+                Assert.AreEqual(6, summary.Restrictions.Count());
 
-                Assert.AreEqual(6, ipRestrictionsProvider.Restrictions.Count);  // should include default allow all rule.
-                for (int i = 1; i <= 5; i++)
-                    Assert.AreEqual(1, ipRestrictionsProvider.Restrictions.Where(x => x.IpAddress == $"{i}.{i}.{i}.{i}{AppServiceIpRestrictionsProvider.IpAddressCidrBlockSuffix}").Count());
+                Assert.AreEqual(6, summary.Restrictions.Count());
+                Assert.AreEqual(1, summary.Restrictions.Where(x => x.IpAddress == $"1.1.1.1{AppServiceIpRestrictionsProvider.IpAddressCidrBlockSuffix}" && !x.IsNew).Count());
+                Assert.AreEqual(1, summary.Restrictions.Where(x => x.IpAddress == $"2.2.2.2{AppServiceIpRestrictionsProvider.IpAddressCidrBlockSuffix}" && !x.IsNew).Count());
+
+                Assert.AreEqual(1, summary.Restrictions.Where(x => x.IpAddress == $"0.0.0.0/0" && x.IsNew).Count());
+                Assert.AreEqual(1, summary.Restrictions.Where(x => x.IpAddress == $"3.3.3.3{AppServiceIpRestrictionsProvider.IpAddressCidrBlockSuffix}" && x.IsNew).Count());
+                Assert.AreEqual(1, summary.Restrictions.Where(x => x.IpAddress == $"4.4.4.4{AppServiceIpRestrictionsProvider.IpAddressCidrBlockSuffix}" && x.IsNew).Count());
+                Assert.AreEqual(1, summary.Restrictions.Where(x => x.IpAddress == $"5.5.5.5{AppServiceIpRestrictionsProvider.IpAddressCidrBlockSuffix}" && x.IsNew).Count());
             }   // using blocker
         }
 

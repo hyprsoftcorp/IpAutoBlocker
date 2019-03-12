@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -91,7 +92,15 @@ namespace Hyprsoft.IpAutoBlocker
                         {
                             try
                             {
-                                await blocker.RunAsync(cts.Token);
+                                var summary = await blocker.RunAsync(cts.Token);
+                                logger.LogInformation($"Run Summary:\n\t" +
+                                    $"Sync Interval: '{summary.SyncInterval.TotalHours}' hours\n\t" +
+                                    $"Logs Filter: '{summary.HttpLogsFilter}'\n\t" +
+                                    $"Cache Filter: '{summary.HttpTrafficCacheFilter}'\n\t" +
+                                    $"New HTTP Logs: '{summary.NewHttpLogEntries}'\n\t" +
+                                    $"HTTP Traffic Cache: '{summary.HttpTrafficeCache.Count()}'\n\t" +
+                                    $"Existing Restrictions: '{summary.Restrictions.Where(x => !x.IsNew).Count()}'\n\t" +
+                                    $"New Restrictions: '{summary.Restrictions.Where(x => x.IsNew).Count()}'");
                                 logger.LogInformation($"Sync completed successfully.  Next check at '{DateTime.Now.Add(settings.CheckInterval)}'.");
                             }
                             catch (TaskCanceledException)

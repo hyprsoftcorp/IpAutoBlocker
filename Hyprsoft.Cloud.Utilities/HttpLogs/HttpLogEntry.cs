@@ -72,7 +72,9 @@ namespace Hyprsoft.Cloud.Utilities.HttpLogs
 
         public override string ToString()
         {
-            return $"Timestamp: {DateTime.ToString("g")}\n\tStatus: {Status}\n\tUri: {Uri}";
+            return $"Timestamp: '{DateTime}'\n\t" +
+                $"Status: '{Status}'\n\t" +
+                $"Uri: '{Uri}'";
         }
 
         # endregion

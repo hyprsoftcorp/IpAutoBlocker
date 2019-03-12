@@ -86,3 +86,39 @@ static async Task Main(string[] args)
         }
     }}
 ```
+
+### Sample Azure Function Log File
+```
+1. Executing 'IpAutoBlocker' (Reason='Timer fired at 2019-03-11T21:56:53.8044105-07:00', Id=00000000-0000-0000-0000-000000000000)
+2. Trigger Details: UnscheduledInvocationReason: RunOnStartup
+3. IP Auto Blocker function triggered at '3/11/2019 9:56:54 PM'.
+4. Hyprsoft Cloud Utilites v1.0.0
+5. IP Auto Blocker running using: HTTP Log Provider: 'FtpHttpLogProvider' IP Restrictions Provider: 'AppServiceIpRestrictionsProvider' Azure Web App: 'myweb' Sync Interval: '24' hours HTTP Logs Filter: 'entries => entries.Where(entry => (Convert(entry.Status, Int32) == 404))' HTTP Traffic Cache Filter: 'items => items.Where(x => (x.Value >= 25))'
+6. Initializing provider 'AppServiceIpRestrictionsProvider'.
+7. Authenticating with Azure Managment REST API using client id '00000000-0000-0000-0000-000000000000'.
+8. Loading existing IP restrictions.
+9. Getting web apps for subscription '00000000-0000-0000-0000-000000000000'.
+10. Getting IP restrictions for 'myweb'.
+11. Found '1' existing IP restrictions.
+12. Loading HTTP traffic cache.
+13. Found '2' HTTP traffic cache items last synced at '3/11/2019 9:43:04 AM'.
+14. Retrieving new HTTP traffic logs.
+15. Connecting to FTP host 'waws-prod-bay-000.ftp.azurewebsites.windows.net'.
+16. Connected. Getting remote files list.
+17. Downloading remote file '/LogFiles/http/RawLogs/7cb501-201902212136.log'.
+18. Deleting remote file '/LogFiles/http/RawLogs/7cb501-201902212136.log'.
+19. Getting entries from HTTP log file 'D:\local\Temp\httplogs\7cb501-201902212136.log'.
+20. Found '80' new HTTP log entries.
+21. Updating HTTP traffic cache with '8' HTTP log entries (excludes traffic for 'xxx.xxx.xxx.xxx').
+22. IP address 'xxx.xxx.xxx.xxx' count is '101'.
+23. IP address 'xxx.xxx.xxx.xxx' count is '12'.
+24. IP address 'xxx.xxx.xxx.xxx' count is '11'.
+25. IP address 'xxx.xxx.xxx.xxx' count is '23'.
+26. IP address 'xxx.xxx.xxx.xxx' count is '33'.
+27. IP address 'xxx.xxx.xxx.xxx' count is '9'.
+28. IP address 'xxx.xxx.xxx.xxx' count is '11'.
+29. IP address 'xxx.xxx.xxx.xxx' count is '10'.
+30. Saving HTTP traffic cache.
+31. Removing local HTTP logs folder 'D:\local\Temp\httplogs'.
+32. IP Auto Blocker function exiting. Next occurance is '3/12/2019 12:00:00 AM'.
+```

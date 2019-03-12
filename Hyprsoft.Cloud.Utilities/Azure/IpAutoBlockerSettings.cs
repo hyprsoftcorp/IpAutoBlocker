@@ -31,7 +31,10 @@ namespace Hyprsoft.Cloud.Utilities.Azure
 
         public override string ToString()
         {
-            return $"Client Id: {ClientId}\n\tTenant: {Tenant}\n\tSubscription Id: {SubscriptionId}\n\tWebsite Name: {WebsiteName}";
+            return $"Client Id: '{ClientId}'\n\t" +
+                $"Tenant: '{Tenant}'\n\t" +
+                $"Subscription Id: '{SubscriptionId}'\n\t" +
+                $"Website Name: '{WebsiteName}'";
         }
 
         #endregion

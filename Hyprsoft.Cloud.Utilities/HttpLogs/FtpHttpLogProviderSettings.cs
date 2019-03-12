@@ -28,7 +28,10 @@ namespace Hyprsoft.Cloud.Utilities.HttpLogs
 
         public override string ToString()
         {
-            return $"Host: {Host}\n\tUsername: {Username}\n\tPassword: *****\n\tLogs Folder: {LogsFolder}";
+            return $"Host: '{Host}'\n\t" +
+                $"Username: '{Username}'\n\t" +
+                $"Password: '*****'\n\t" +
+                $"Logs Folder: '{LogsFolder}'";
         }
 
         #endregion

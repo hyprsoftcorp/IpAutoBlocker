@@ -59,6 +59,7 @@ namespace Hyprsoft.Cloud.Utilities.Azure
                 Logger.LogInformation("Adding new IP restriction for '0.0.0.0/0' with action 'Allow'.");
                 Restrictions.Add(new IpRestriction
                 {
+                    IsNew = true,
                     IpAddress = $"0.0.0.0/0",
                     Action = "Allow",
                     Priority = 100,

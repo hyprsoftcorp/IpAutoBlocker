@@ -46,7 +46,10 @@ namespace Hyprsoft.Cloud.Utilities.Azure
 
         public override string ToString()
         {
-            return $"Loaded: {IsLoaded}\n\tFilename: {Filename}\n\tLast Synced: {Cache.LastSyncedUtc}\n\tData: {Cache.Entries.Count}";
+            return $"Loaded: '{IsLoaded}'\n\t" +
+                $"Last Synced: '{Cache.LastSyncedUtc}'\n\t" +
+                $"Entries: '{Cache.Entries.Count}'\n\t" +
+                $"Filename: '{Filename}'";
         }
 
         #endregion

@@ -39,9 +39,18 @@ namespace Hyprsoft.IpAutoBlocker.Cloud
                     Password = config["Values:FtpHttpLogProviderSettings:Password"],
                     LogsFolder = config["Values:FtpHttpLogProviderSettings:LogsFolder"]
                 }),
-                CacheItemsToIpRestictionsFilter = items => items.Where(x => x.Value >= 15)
+                HttpTrafficCacheFilter = items => items.Where(x => x.Value >= 15)
             };
-            await blocker.RunAsync(token);
+            var summary = await blocker.RunAsync(token);
+
+            log.LogInformation($"Run Summary:\n\t" +
+                $"Sync Interval: '{summary.SyncInterval.TotalHours}' hours\n\t" +
+                $"Logs Filter: '{summary.HttpLogsFilter}'\n\t" +
+                $"Cache Filter: '{summary.HttpTrafficCacheFilter}'\n\t" +
+                $"New HTTP Logs: '{summary.NewHttpLogEntries}'\n\t" +
+                $"HTTP Traffic Cache: '{summary.HttpTrafficeCache.Count()}'\n\t" +
+                $"Existing Restrictions: '{summary.Restrictions.Where(x => !x.IsNew).Count()}'\n\t" +
+                $"New Restrictions: '{summary.Restrictions.Where(x => x.IsNew).Count()}'");
 
             log.LogInformation($"IP Auto Blocker function exiting.  Next occurance is '{myTimer.ScheduleStatus.Next}'.");
         }

@@ -10,7 +10,7 @@ namespace Hyprsoft.Cloud.Utilities.Azure
 
         public override string ToString()
         {
-            return $"WebApps: {WebApps.Length}";
+            return $"WebApps: '{WebApps.Length}'";
         }
     }
 
@@ -28,7 +28,10 @@ namespace Hyprsoft.Cloud.Utilities.Azure
 
         public override string ToString()
         {
-            return $"Id: {Id}\n\tName: {Name}\n\tType: {Type}\n\tLocation: {Location}\n\tRestrictions: {Properties.Restrictions.Count}";
+            return $"Id: {Id}\n\tName: '{Name}'\n\t" +
+                $"Type: '{Type}'\n\t" +
+                $"Location: '{Location}'\n\t" +
+                $"Restrictions: '{Properties.Restrictions.Count}'";
         }
     }
 
@@ -40,6 +43,9 @@ namespace Hyprsoft.Cloud.Utilities.Azure
 
     public class IpRestriction
     {
+        [JsonIgnore]
+        public bool IsNew { get; set; }
+
         public string IpAddress { get; set; }
 
         public string Action { get; set; }
@@ -52,7 +58,11 @@ namespace Hyprsoft.Cloud.Utilities.Azure
 
         public override string ToString()
         {
-            return $"IP: {IpAddress}\n\tName: {Name}\n\tAction: {Action}\n\tPriority: {Priority}";
+            return $"IP: {IpAddress}\n\t" +
+                $"Name: '{Name}'\n\t" +
+                $"Action: '{Action}'\n\t" +
+                $"Priority: '{Priority}'\n\t" +
+                $"New: '{IsNew}'";
         }
     }
 }
