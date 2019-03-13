@@ -4,7 +4,7 @@ namespace Hyprsoft.Cloud.Utilities.HttpLogs
 {
     public class FtpHttpLogProviderSettings
     {
-        #region Fields
+        #region Properties
 
         public string Host { get; set; }
 
@@ -13,6 +13,8 @@ namespace Hyprsoft.Cloud.Utilities.HttpLogs
         public string Password { get; set; }
 
         public string LogsFolder { get; set; } = "/LogFiles/http/RawLogs";
+
+        public bool AutoDeleteLogs { get; set; }
 
         #endregion
 
@@ -30,8 +32,8 @@ namespace Hyprsoft.Cloud.Utilities.HttpLogs
         {
             return $"Host: '{Host}'\n\t" +
                 $"Username: '{Username}'\n\t" +
-                $"Password: '*****'\n\t" +
-                $"Logs Folder: '{LogsFolder}'";
+                $"Auto delete: '{AutoDeleteLogs}'\n\t" +
+                $"Logs Folder: '{LogsFolder.ToLower()}'";
         }
 
         #endregion

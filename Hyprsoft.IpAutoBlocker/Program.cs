@@ -85,7 +85,8 @@ namespace Hyprsoft.IpAutoBlocker
 
                     using (var blocker = new Cloud.Utilities.Azure.IpAutoBlocker(_loggerFactory.CreateLogger<Cloud.Utilities.Azure.IpAutoBlocker>(), settings.IpAutoBlockerSettings)
                     {
-                        HttpLogProvider = new FtpHttpLogProvider(settings.FtpHttpLogProviderSettings)
+                        HttpLogProvider = new FtpHttpLogProvider(settings.FtpHttpLogProviderSettings),
+                        HttpTrafficCacheFilter = items => items.Where(x => x.Value >= 15)
                     })
                     {
                         while (!cts.Token.IsCancellationRequested)

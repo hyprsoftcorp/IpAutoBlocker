@@ -16,6 +16,8 @@ namespace Hyprsoft.Cloud.Utilities.Azure
 
         public string WebsiteName { get; set; }
 
+        public TimeSpan SyncInterval { get; set; } = TimeSpan.FromDays(1);
+
         #endregion
 
         #region Methods
@@ -34,7 +36,8 @@ namespace Hyprsoft.Cloud.Utilities.Azure
             return $"Client Id: '{ClientId}'\n\t" +
                 $"Tenant: '{Tenant}'\n\t" +
                 $"Subscription Id: '{SubscriptionId}'\n\t" +
-                $"Website Name: '{WebsiteName}'";
+                $"Website Name: '{WebsiteName}'\n\t" +
+                $"Sync Interval: '{SyncInterval.TotalHours} hours'";
         }
 
         #endregion

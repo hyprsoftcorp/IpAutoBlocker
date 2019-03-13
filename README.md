@@ -14,17 +14,24 @@ The library periodically performs the following functions:
 3. Since the library uses the Azure Management REST API, an Azure active directory app registration must be created and configured.
 
 ## App Settings
-Setting | Sample Value | Description
+### IP Auto Blocker
+Setting | Description | Default | Sample Value
 --- | --- | ---
-IpAutoBlockerSettings:ClientId | 8a171fc2-f71f-4eb3-95fd-e4e5da70f8d2 | Azure service principal client identifier.
-IpAutoBlockerSettings:ClientSecret | cl13ntS3cr3t | Azure service principal client secret.
-IpAutoBlockerSettings:Tenant | edb1b40-6058-439e-a656-46d8d02c4645 | Azure tenant.
-IpAutoBlockerSettings:SubscriptionId | 29abab24-250f-4227-adcc-ab81b84ae9df | Azure subscription id where website resides.
-IpAutoBlockerSettings:WebsiteName | mywebsite | Azure app service name.
-FtpHttpLogProviderSettings:Host | waws-prod-bay-011.ftp.azurewebsites.windows.net | FTP host where HTTP logs reside.
-FtpHttpLogProviderSettings:Username | mywebsite\\$mywebsite | FTP username.
-FtpHttpLogProviderSettings:Password | ftpp@ssw0rd | FTP password.
-FtpHttpLogProviderSettings:LogsFolder | /LogFiles/http/RawLogs | FTP remote path where HTTP logs reside.
+IpAutoBlockerSettings:ClientId* | Azure service principal client identifier. | Null | 8a171fc2-f71f-4eb3-95fd-e4e5da70f8d2
+IpAutoBlockerSettings:ClientSecret* | Azure service principal client secret. | Null | cl13ntS3cr3t 
+IpAutoBlockerSettings:Tenant* | Azure tenant. | Null | edb1b40-6058-439e-a656-46d8d02c4645
+IpAutoBlockerSettings:SubscriptionId* | Azure subscription id where website resides. | Null | 29abab24-250f-4227-adcc-ab81b84ae9df
+IpAutoBlockerSettings:WebsiteName* | Azure app service name. | Null | mywebsite
+IpAutoBlockerSettings:SyncInterval | Interval at which the HTTP traffic cache is synched with the app service IP restrictions. | 24-hours  | 1.00:00:00
+
+### FTP HTTP Log Provider
+Setting | Description | Default | Sample Value
+--- | --- | ---
+FtpHttpLogProviderSettings:Host* | FTP host where HTTP logs reside. | Null | waws-prod-bay-011.ftp.azurewebsites.windows.net
+FtpHttpLogProviderSettings:Username* | FTP username. | Null| mywebsite\\$mywebsite
+FtpHttpLogProviderSettings:Password* | FTP password. | Null | ftpp@ssw0rd
+FtpHttpLogProviderSettings:LogsFolder* | FTP remote path where HTTP logs reside. | /LogFiles/http/RawLogs | /LogFiles/mylogs
+FtpHttpLogProviderSettings:AutoDeleteLogs | Delete remote HTTP log files once downloaded; otherwise back them up. | false | true
 
 ## Implementations
 ### Azure Function Sample

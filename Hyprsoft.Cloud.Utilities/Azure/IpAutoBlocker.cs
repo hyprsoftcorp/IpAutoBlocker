@@ -20,7 +20,6 @@ namespace Hyprsoft.Cloud.Utilities.Azure
         #region Fields
 
         private readonly ILogger _logger;
-        private readonly IpAutoBlockerSettings _settings;
 
         private bool _isDisposed;
         private HttpLogProvider _httpLogProvider;
@@ -35,9 +34,9 @@ namespace Hyprsoft.Cloud.Utilities.Azure
         public IpAutoBlocker(ILogger logger, IpAutoBlockerSettings settings)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
-            if (!_settings.IsValid())
-                throw new ArgumentOutOfRangeException("IP restriction mananger settings are missing or invalid.");
+            Settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            if (!Settings.IsValid())
+                throw new ArgumentOutOfRangeException("IP Auto Blocker settings are missing or invalid.");
 
             var product = (((AssemblyProductAttribute)GetType().Assembly.GetCustomAttribute(typeof(AssemblyProductAttribute))).Product);
             var version = (((AssemblyInformationalVersionAttribute)GetType().Assembly.GetCustomAttribute(typeof(AssemblyInformationalVersionAttribute))).InformationalVersion);
@@ -50,6 +49,8 @@ namespace Hyprsoft.Cloud.Utilities.Azure
         #endregion
 
         #region Properties
+
+        public IpAutoBlockerSettings Settings { get; }
 
         public HttpLogProvider HttpLogProvider
         {
@@ -71,8 +72,6 @@ namespace Hyprsoft.Cloud.Utilities.Azure
             }
         }
 
-        public TimeSpan SyncInterval { get; set; } = TimeSpan.FromDays(1);
-
         public Expression<Func<IEnumerable<HttpLogEntry>, IEnumerable<HttpLogEntry>>> HttpLogsFilter { get; set; } = entries => entries.Where(entry => entry.Status == HttpStatusCode.NotFound);
 
         public Expression<Func<Dictionary<string, int>, IEnumerable<KeyValuePair<string, int>>>> HttpTrafficCacheFilter { get; set; } = items => items.Where(item => item.Value >= 25);
@@ -85,7 +84,7 @@ namespace Hyprsoft.Cloud.Utilities.Azure
         {
             var summary = new IpAutoBlockerSummary
             {
-                SyncInterval = SyncInterval,
+                SyncInterval = Settings.SyncInterval,
                 HttpLogsFilter = HttpLogsFilter.ToString(),
                 HttpTrafficCacheFilter = HttpTrafficCacheFilter.ToString()
             };
@@ -93,8 +92,8 @@ namespace Hyprsoft.Cloud.Utilities.Azure
             _logger.LogInformation($"IP Auto Blocker running using:\n\t" +
                     $"HTTP Log Provider: '{HttpLogProvider.GetType().Name}'\n\t" +
                     $"IP Restrictions Provider: '{IpRestrictionsProvider.GetType().Name}'\n\t" +
-                    $"Azure Web App: '{_settings.WebsiteName}'\n\t" +
-                    $"Sync Interval: '{SyncInterval.TotalHours}' hours\n\t" +
+                    $"Azure Web App: '{Settings.WebsiteName}'\n\t" +
+                    $"Sync Interval: '{Settings.SyncInterval.TotalHours}' hours\n\t" + 
                     $"HTTP Logs Filter: '{HttpLogsFilter.ToString()}'\n\t" +
                     $"HTTP Traffic Cache Filter: '{HttpTrafficCacheFilter.ToString()}'");
 
@@ -124,7 +123,7 @@ namespace Hyprsoft.Cloud.Utilities.Azure
                 Directory.Delete(HttpLogProvider.LocalLogsFolder, true);
             }   // Local logs folder exists?
 
-            if (_httpTrafficCache.Cache.LastSyncedUtc.Add(SyncInterval) <= DateTime.UtcNow)
+            if (_httpTrafficCache.Cache.LastSyncedUtc.Add(Settings.SyncInterval) <= DateTime.UtcNow)
             {
                 await AddIpRestictionsAsync(token);
                 await ClearHttpTrafficCacheAsync();

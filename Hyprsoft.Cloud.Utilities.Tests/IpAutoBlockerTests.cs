@@ -48,7 +48,6 @@ namespace Hyprsoft.Cloud.Utilities.Tests
                 // Defaults
                 Assert.AreEqual(typeof(LocalHttpLogProvider), blocker.HttpLogProvider.GetType());
                 Assert.AreEqual(typeof(AppServiceIpRestrictionsProvider), blocker.IpRestrictionsProvider.GetType());
-                Assert.AreEqual(TimeSpan.FromDays(1), blocker.SyncInterval);
 
                 blocker.HttpLogProvider = new UnitTestHttpLogProvider();
                 Assert.IsNotNull(blocker.HttpLogProvider.Logger);
@@ -73,7 +72,7 @@ namespace Hyprsoft.Cloud.Utilities.Tests
                 Assert.AreEqual(1, summary.Restrictions.Where(x => x.IpAddress == $"2.2.2.2{AppServiceIpRestrictionsProvider.IpAddressCidrBlockSuffix}" && !x.IsNew).Count());
 
                 // Force a sync.
-                blocker.SyncInterval = TimeSpan.FromTicks(1);
+                blocker.Settings.SyncInterval = TimeSpan.FromTicks(1);
                 blocker.HttpLogsFilter = entries => entries.Where(x => x.Status == HttpStatusCode.OK);
                 summary = await blocker.RunAsync();
 
