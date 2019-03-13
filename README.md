@@ -16,7 +16,7 @@ The library periodically performs the following functions:
 ## App Settings
 ### IP Auto Blocker
 Setting | Description | Default | Sample Value
---- | --- | ---
+--- | --- | --- | ---
 IpAutoBlockerSettings:ClientId* | Azure service principal client identifier. | Null | 8a171fc2-f71f-4eb3-95fd-e4e5da70f8d2
 IpAutoBlockerSettings:ClientSecret* | Azure service principal client secret. | Null | cl13ntS3cr3t 
 IpAutoBlockerSettings:Tenant* | Azure tenant. | Null | edb1b40-6058-439e-a656-46d8d02c4645
@@ -26,7 +26,7 @@ IpAutoBlockerSettings:SyncInterval | Interval at which the HTTP traffic cache is
 
 ### FTP HTTP Log Provider
 Setting | Description | Default | Sample Value
---- | --- | ---
+--- | --- | --- | ---
 FtpHttpLogProviderSettings:Host* | FTP host where HTTP logs reside. | Null | waws-prod-bay-011.ftp.azurewebsites.windows.net
 FtpHttpLogProviderSettings:Username* | FTP username. | Null| mywebsite\\$mywebsite
 FtpHttpLogProviderSettings:Password* | FTP password. | Null | ftpp@ssw0rd
