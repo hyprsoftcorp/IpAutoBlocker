@@ -10,6 +10,8 @@
     <Description>Hyprsoft IP Auto Blocker Monitor</Description>
     <Copyright>Copyright © 2019 by Hyprsoft Corporation</Copyright>
     <PackageProjectUrl>http://www.hyprsoft.com/</PackageProjectUrl>
+    <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
