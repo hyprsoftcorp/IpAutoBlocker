@@ -136,14 +136,17 @@ namespace Hyprsoft.Cloud.Utilities.Azure
         private async Task UpdateHttpTrafficCacheAsync(IEnumerable<HttpLogEntry> entries)
         {
             var myIp = await _httpClient.GetStringAsync("/").ConfigureAwait(false);
-            var entiresToCache = HttpLogsFilter.Compile().Invoke(entries).Where(x => x.IpAddress != myIp);
+            var entiresToCache = HttpLogsFilter.Compile().Invoke(entries)
+                .Where(x => x.IpAddress != myIp)
+                .GroupBy(x => x.IpAddress)
+                .Select(x => new { IpAddress = x.Key, Count = x.Count() });
             _logger.LogInformation($"Updating HTTP traffic cache with '{entiresToCache.Count()}' HTTP log entries (excludes traffic for '{myIp}').");
             foreach (var entry in entiresToCache)
             {
                 if (!_httpTrafficCache.Cache.Entries.ContainsKey(entry.IpAddress))
                     _httpTrafficCache.Cache.Entries.Add(entry.IpAddress, 0);
 
-                _httpTrafficCache.Cache.Entries[entry.IpAddress]++;
+                _httpTrafficCache.Cache.Entries[entry.IpAddress] += entry.Count;
                 _logger.LogInformation($"IP address '{entry.IpAddress}' count is '{_httpTrafficCache.Cache.Entries[entry.IpAddress]}'.");
             }   // for each http log entry
 
