@@ -8,7 +8,6 @@ using System.Net;
 using System.Threading;
 using System.IO;
 using System.Reflection;
-using System.Net.Http;
 using Hyprsoft.Cloud.Utilities.HttpLogs;
 using System.Linq.Expressions;
 
@@ -25,7 +24,6 @@ namespace Hyprsoft.Cloud.Utilities.Azure
         private HttpLogProvider _httpLogProvider;
         private IpRestrictionsProvider _ipRestrictionsProvider;
         private HttpTrafficCache _httpTrafficCache = new HttpTrafficCache();
-        private HttpClient _httpClient = new HttpClient { BaseAddress = new Uri("https://api.ipify.org/") };
 
         #endregion
 
@@ -72,7 +70,7 @@ namespace Hyprsoft.Cloud.Utilities.Azure
             }
         }
 
-        public Expression<Func<IEnumerable<HttpLogEntry>, IEnumerable<HttpLogEntry>>> HttpLogsFilter { get; set; } = entries => entries.Where(entry => entry.Status == HttpStatusCode.NotFound);
+        public Expression<Func<IEnumerable<HttpLogEntry>, IEnumerable<HttpLogEntry>>> HttpLogsFilter { get; set; } = entries => entries.Where(entry => entry.Status == HttpStatusCode.NotFound && !entry.Uri.AbsolutePath.EndsWith(".map"));
 
         public Expression<Func<Dictionary<string, int>, IEnumerable<KeyValuePair<string, int>>>> HttpTrafficCacheFilter { get; set; } = items => items.Where(item => item.Value >= 25);
 
@@ -93,7 +91,7 @@ namespace Hyprsoft.Cloud.Utilities.Azure
                     $"HTTP Log Provider: '{HttpLogProvider.GetType().Name}'\n\t" +
                     $"IP Restrictions Provider: '{IpRestrictionsProvider.GetType().Name}'\n\t" +
                     $"Azure Web App: '{Settings.WebsiteName}'\n\t" +
-                    $"Sync Interval: '{Settings.SyncInterval.TotalHours}' hours\n\t" + 
+                    $"Sync Interval: '{Settings.SyncInterval.TotalHours}' hours\n\t" +
                     $"HTTP Logs Filter: '{HttpLogsFilter.ToString()}'\n\t" +
                     $"HTTP Traffic Cache Filter: '{HttpTrafficCacheFilter.ToString()}'");
 
@@ -133,14 +131,12 @@ namespace Hyprsoft.Cloud.Utilities.Azure
             return summary;
         }
 
-        private async Task UpdateHttpTrafficCacheAsync(IEnumerable<HttpLogEntry> entries)
+        private Task UpdateHttpTrafficCacheAsync(IEnumerable<HttpLogEntry> entries)
         {
-            var myIp = await _httpClient.GetStringAsync("/").ConfigureAwait(false);
             var entiresToCache = HttpLogsFilter.Compile().Invoke(entries)
-                .Where(x => x.IpAddress != myIp)
                 .GroupBy(x => x.IpAddress)
                 .Select(x => new { IpAddress = x.Key, Count = x.Count() });
-            _logger.LogInformation($"Updating HTTP traffic cache with '{entiresToCache.Count()}' HTTP log entries (excludes traffic for '{myIp}').");
+            _logger.LogInformation($"Updating HTTP traffic cache with '{entiresToCache.Count()}' HTTP log entries.");
             foreach (var entry in entiresToCache)
             {
                 if (!_httpTrafficCache.Cache.Entries.ContainsKey(entry.IpAddress))
@@ -152,6 +148,8 @@ namespace Hyprsoft.Cloud.Utilities.Azure
 
             _logger.LogInformation("Saving HTTP traffic cache.");
             _httpTrafficCache.Save();
+
+            return Task.CompletedTask;
         }
 
         internal Task ClearHttpTrafficCacheAsync()
@@ -207,7 +205,6 @@ namespace Hyprsoft.Cloud.Utilities.Azure
             // Managed resources.
             if (disposing)
             {
-                _httpClient?.Dispose();
                 IpRestrictionsProvider?.Dispose();
             }
 

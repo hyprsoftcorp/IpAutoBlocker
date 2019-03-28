@@ -63,7 +63,7 @@ namespace Hyprsoft.Cloud.Utilities.Tests
 
                 Assert.AreEqual(blocker.HttpLogsFilter.ToString(), summary.HttpLogsFilter);
                 Assert.AreEqual(blocker.HttpTrafficCacheFilter.ToString(), summary.HttpTrafficCacheFilter);
-                Assert.AreEqual(9, summary.NewHttpLogEntries);
+                Assert.AreEqual(10, summary.NewHttpLogEntries);
 
                 Assert.AreEqual(1, summary.HttpTrafficeCache.Count());
                 Assert.AreEqual(1, summary.HttpTrafficeCache.Where(x => x.Key == "4.4.4.4" && x.Value == 3).Count());
@@ -76,7 +76,7 @@ namespace Hyprsoft.Cloud.Utilities.Tests
                 blocker.HttpLogsFilter = entries => entries.Where(x => x.Status == HttpStatusCode.OK);
                 summary = await blocker.RunAsync();
 
-                Assert.AreEqual(9, summary.NewHttpLogEntries);
+                Assert.AreEqual(10, summary.NewHttpLogEntries);
 
                 Assert.AreEqual(3, summary.HttpTrafficeCache.Count());
                 Assert.AreEqual(1, summary.HttpTrafficeCache.Where(x => x.Key == "3.3.3.3" && x.Value == 3).Count());
