@@ -18,6 +18,8 @@ namespace Hyprsoft.Cloud.Utilities.Azure
 
         public TimeSpan SyncInterval { get; set; } = TimeSpan.FromDays(1);
 
+        public TimeSpan SyncIntervalSkew { get; set; } = TimeSpan.FromMinutes(3);
+
         #endregion
 
         #region Methods

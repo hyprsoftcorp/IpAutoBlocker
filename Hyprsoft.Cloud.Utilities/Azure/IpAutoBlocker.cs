@@ -83,6 +83,7 @@ namespace Hyprsoft.Cloud.Utilities.Azure
             var summary = new IpAutoBlockerSummary
             {
                 SyncInterval = Settings.SyncInterval,
+                SyncIntervalSkew = Settings.SyncIntervalSkew,
                 HttpLogsFilter = HttpLogsFilter.ToString(),
                 HttpTrafficCacheFilter = HttpTrafficCacheFilter.ToString()
             };
@@ -91,7 +92,7 @@ namespace Hyprsoft.Cloud.Utilities.Azure
                     $"HTTP Log Provider: '{HttpLogProvider.GetType().Name}'\n\t" +
                     $"IP Restrictions Provider: '{IpRestrictionsProvider.GetType().Name}'\n\t" +
                     $"Azure Web App: '{Settings.WebsiteName}'\n\t" +
-                    $"Sync Interval: '{Settings.SyncInterval.TotalHours}' hours\n\t" +
+                    $"Sync Interval: '{Settings.SyncInterval.TotalHours}' hours (skew: '{Settings.SyncIntervalSkew.TotalMinutes}' minutes)\n\t" +
                     $"HTTP Logs Filter: '{HttpLogsFilter.ToString()}'\n\t" +
                     $"HTTP Traffic Cache Filter: '{HttpTrafficCacheFilter.ToString()}'");
 
@@ -121,7 +122,7 @@ namespace Hyprsoft.Cloud.Utilities.Azure
                 Directory.Delete(HttpLogProvider.LocalLogsFolder, true);
             }   // Local logs folder exists?
 
-            if (_httpTrafficCache.Cache.LastSyncedUtc.Add(Settings.SyncInterval) <= DateTime.UtcNow)
+            if (_httpTrafficCache.Cache.LastSyncedUtc.Add(Settings.SyncInterval).Subtract(Settings.SyncIntervalSkew) <= DateTime.UtcNow)
             {
                 await AddIpRestictionsAsync(token);
                 await ClearHttpTrafficCacheAsync();

@@ -60,7 +60,7 @@ namespace Hyprsoft.IpAutoBlocker.Cloud
             var summary = await blocker.RunAsync(token);
 
             log.LogInformation($"Run Summary:\n\t" +
-                $"Sync Interval: '{summary.SyncInterval.TotalHours}' hours\n\t" +
+                $"Sync Interval: '{summary.SyncInterval.TotalHours}' hours (skew: '{summary.SyncIntervalSkew.TotalMinutes}' minutes)\n\t" +
                 $"Logs Filter: '{summary.HttpLogsFilter}'\n\t" +
                 $"Cache Filter: '{summary.HttpTrafficCacheFilter}'\n\t" +
                 $"New HTTP Logs: '{summary.NewHttpLogEntries}'\n\t" +

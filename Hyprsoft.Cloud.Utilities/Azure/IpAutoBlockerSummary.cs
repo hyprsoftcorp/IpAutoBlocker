@@ -8,6 +8,8 @@ namespace Hyprsoft.Cloud.Utilities.Azure
     {
         public TimeSpan SyncInterval { get; set; }
 
+        public TimeSpan SyncIntervalSkew { get; set; }
+
         public string HttpLogsFilter { get; set; }
 
         public string HttpTrafficCacheFilter { get; set; }
@@ -20,7 +22,7 @@ namespace Hyprsoft.Cloud.Utilities.Azure
 
         public override string ToString()
         {
-            return $"Sync Interval: '{SyncInterval.TotalHours}' hours\n\t" +
+            return $"Sync Interval: '{SyncInterval.TotalHours}' hours (skew: '{SyncIntervalSkew.TotalMinutes}' minutes)\n\t" +
                 $"HTTP Traffic Cache: '{HttpTrafficeCache.Count()}'\n\t" +
                 $"Restrictions: '{Restrictions.Count()}'\n\t" +
                 $"New HTTP Logs: '{NewHttpLogEntries}'";
