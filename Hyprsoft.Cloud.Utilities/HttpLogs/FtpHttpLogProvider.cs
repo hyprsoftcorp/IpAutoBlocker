@@ -48,7 +48,7 @@ namespace Hyprsoft.Cloud.Utilities.HttpLogs
 
                     Logger?.LogInformation($"Downloading remote file '{file.FullName}'.");
                     await client.DownloadFileAsync(Path.Combine(LocalLogsFolder, file.Name), file.FullName, FtpLocalExists.Overwrite, FtpVerify.None, null, cancellationToken).ConfigureAwait(false);
-                    // Once our log is downloaded don't allow our delete or rename to be cancelled.
+                    // Once our log is downloaded don't allow our delete or rename to be canceled.
                     if (Settings.AutoDeleteLogs)
                     {
                         Logger?.LogInformation($"Deleting remote file '{file.FullName}'.");
@@ -62,8 +62,9 @@ namespace Hyprsoft.Cloud.Utilities.HttpLogs
                         Logger?.LogInformation($"Backing up remote file '{file.FullName}' to '{dest}'.");
                         await client.RenameAsync(file.FullName, dest).ConfigureAwait(false);
                     }
-                    await client.DisconnectAsync().ConfigureAwait(false);
                 }   // for each file
+                Logger?.LogInformation($"Disconnecting from FTP host '{Settings.Host}'.");
+                await client.DisconnectAsync(cancellationToken).ConfigureAwait(false);
             }   // using ftp client
 
             return await base.OnGetEntriesAsync(cancellationToken).ConfigureAwait(false);
