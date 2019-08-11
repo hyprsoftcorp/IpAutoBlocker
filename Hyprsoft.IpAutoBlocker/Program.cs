@@ -1,5 +1,4 @@
-﻿using Hyprsoft.Cloud.Utilities.Azure;
-using Hyprsoft.Cloud.Utilities.HttpLogs;
+﻿using Hyprsoft.Cloud.Utilities.HttpLogs.Stores;
 using Hyprsoft.Logging.Core;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Logging;
@@ -17,7 +16,7 @@ using System.Threading.Tasks;
 namespace Hyprsoft.IpAutoBlocker
 {
     /* Wndows IoT Core Startup
-    schtasks /create /tn "Hyprsoft IP Auto Blocker" /tr c:\hyprsoft\ipautoblocker\Hyprsoft.IpAutoBlocker.Monitor.exe /sc onstart /ru DefaultAccount
+    schtasks /create /tn "Hyprsoft IP Auto Blocker" /tr c:\hyprsoft\ipautoblocker\Hyprsoft.IpAutoBlocker.exe /sc onstart /ru DefaultAccount
     schtasks /delete /f /tn "Hyprsoft IP Auto Blocker"
     */
 
@@ -26,7 +25,7 @@ namespace Hyprsoft.IpAutoBlocker
         #region Fields
 
         private const string AppSettingsFilename = "appsettings.json";
-        private const string DataProtectionApplicationName = "Hyprsoft.IpRestrictions.Monitor";
+        private const string DataProtectionApplicationName = "Hyprsoft.IpAutoBlocker.Console";
 
         private static ILoggerFactory _loggerFactory;
 
@@ -55,24 +54,21 @@ namespace Hyprsoft.IpAutoBlocker
                 else
                     await File.WriteAllTextAsync(settingsFilename, JsonConvert.SerializeObject(settings, Formatting.Indented));
 
-                if (!settings.IpAutoBlockerSettings.IsValid() || !settings.FtpHttpLogProviderSettings.IsValid())
-                    throw new InvalidOperationException($"The '{settingsFilename}' file is missing some settings.  The following settings are required: {nameof(IpAutoBlockerSettings.ClientId)}, " +
-                        $"{nameof(IpAutoBlockerSettings.ClientSecret)}, {nameof(IpAutoBlockerSettings.Tenant)}, {nameof(IpAutoBlockerSettings.SubscriptionId)}, " +
-                        $"{nameof(IpAutoBlockerSettings.WebsiteName)}, {nameof(FtpHttpLogProviderSettings.Host)}, {nameof(FtpHttpLogProviderSettings.Username)}, " +
-                        $"{nameof(FtpHttpLogProviderSettings.Password)}, {nameof(FtpHttpLogProviderSettings.LogsFolder)}.");
+                var ipAutoBlockerSettingsErrors = settings.IpAutoBlockerSettings.IsValid();
+                var sqlServerHttpLogStoreSettingsErrors = settings.SqlServerHttpLogStoreSettings.IsValid();
+                if (ipAutoBlockerSettingsErrors.Count() > 0 || sqlServerHttpLogStoreSettingsErrors.Count() > 0)
+                    throw new InvalidOperationException($"The '{settingsFilename}' file is missing some settings. {string.Join(" ", ipAutoBlockerSettingsErrors.Concat(sqlServerHttpLogStoreSettingsErrors))}");
 
                 // Encrypt our sensitive settings if this is our first run.
                 if (settings.FirstRun)
                 {
                     logger.LogWarning("First run detected.  Encrypting sensitive settings.");
-                    settings.IpAutoBlockerSettings.ClientSecret = EncryptString(settings.IpAutoBlockerSettings.ClientSecret);
-                    settings.FtpHttpLogProviderSettings.Password = EncryptString(settings.FtpHttpLogProviderSettings.Password);
+                    settings.SqlServerHttpLogStoreSettings.ConnectionString = EncryptString(settings.SqlServerHttpLogStoreSettings.ConnectionString);
                     settings.FirstRun = false;
                     logger.LogInformation($"Saving app settings to '{settingsFilename}'.");
                     await File.WriteAllTextAsync(settingsFilename, JsonConvert.SerializeObject(settings, Formatting.Indented));
                 }   // First run?
-                settings.IpAutoBlockerSettings.ClientSecret = DecryptString(settings.IpAutoBlockerSettings.ClientSecret);
-                settings.FtpHttpLogProviderSettings.Password = DecryptString(settings.FtpHttpLogProviderSettings.Password);
+                settings.SqlServerHttpLogStoreSettings.ConnectionString = DecryptString(settings.SqlServerHttpLogStoreSettings.ConnectionString);
 
                 using (var cts = new CancellationTokenSource())
                 {
@@ -85,7 +81,7 @@ namespace Hyprsoft.IpAutoBlocker
 
                     using (var blocker = new Cloud.Utilities.Azure.IpAutoBlocker(_loggerFactory.CreateLogger<Cloud.Utilities.Azure.IpAutoBlocker>(), settings.IpAutoBlockerSettings)
                     {
-                        HttpLogProvider = new FtpHttpLogProvider(settings.FtpHttpLogProviderSettings),
+                        HttpLogStore = new SqlServerHttpLogStore(settings.SqlServerHttpLogStoreSettings),
                         HttpTrafficCacheFilter = items => items.Where(x => x.Value >= 15)
                     })
                     {

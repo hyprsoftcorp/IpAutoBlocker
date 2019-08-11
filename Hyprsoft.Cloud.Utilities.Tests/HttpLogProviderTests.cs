@@ -1,4 +1,4 @@
-﻿using Hyprsoft.Cloud.Utilities.HttpLogs;
+﻿using Hyprsoft.Cloud.Utilities.HttpLogs.Providers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.IO;

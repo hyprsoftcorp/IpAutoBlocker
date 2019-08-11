@@ -3,10 +3,11 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Hyprsoft.Cloud.Utilities.HttpLogs
+namespace Hyprsoft.Cloud.Utilities.HttpLogs.Providers
 {
     public class FtpHttpLogProvider : LocalHttpLogProvider
     {
@@ -15,8 +16,9 @@ namespace Hyprsoft.Cloud.Utilities.HttpLogs
         public FtpHttpLogProvider(FtpHttpLogProviderSettings settings) : base()
         {
             Settings = settings ?? throw new ArgumentNullException(nameof(settings));
-            if (!Settings.IsValid())
-                throw new ArgumentOutOfRangeException("FTP HTTP log provider settings are missing or invalid.");
+            var errors = Settings.IsValid();
+            if (errors.Count() > 0)
+                throw new ArgumentOutOfRangeException($"FTP HTTP log provider settings are missing or invalid. {string.Join(" ", errors)}");
         }
 
         #endregion

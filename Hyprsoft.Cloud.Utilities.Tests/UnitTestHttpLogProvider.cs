@@ -1,4 +1,5 @@
 ﻿using Hyprsoft.Cloud.Utilities.HttpLogs;
+using Hyprsoft.Cloud.Utilities.HttpLogs.Providers;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,6 +8,8 @@ namespace Hyprsoft.Cloud.Utilities.Tests
 {
     public class UnitTestHttpLogProvider : HttpLogProvider
     {
+        #region Constructors
+
         public UnitTestHttpLogProvider()
         {
             Entries = new List<HttpLogEntry>
@@ -26,11 +29,21 @@ namespace Hyprsoft.Cloud.Utilities.Tests
             };
         }
 
+        #endregion
+
+        #region Properties
+
         internal List<HttpLogEntry> Entries { get; }
+
+        #endregion
+
+        #region Methods
 
         protected override Task<IEnumerable<HttpLogEntry>> OnGetEntriesAsync(CancellationToken CancellationToken = default(CancellationToken))
         {
             return Task.FromResult((IEnumerable<HttpLogEntry>)Entries);
         }
+
+        #endregion
     }
 }
