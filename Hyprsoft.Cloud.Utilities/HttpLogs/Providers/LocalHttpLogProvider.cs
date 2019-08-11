@@ -5,7 +5,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Hyprsoft.Cloud.Utilities.HttpLogs
+namespace Hyprsoft.Cloud.Utilities.HttpLogs.Providers
 {
     public class LocalHttpLogProvider : HttpLogProvider
     {

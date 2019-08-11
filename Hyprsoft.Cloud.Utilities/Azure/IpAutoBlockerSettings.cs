@@ -1,20 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Hyprsoft.Cloud.Utilities.Azure
 {
-    public class IpAutoBlockerSettings
+    public class IpAutoBlockerSettings : IValidatable
     {
         #region Properties
-
-        public string ClientId { get; set; }
-
-        public string ClientSecret { get; set; }
-
-        public string Tenant { get; set; }
-
-        public string SubscriptionId { get; set; }
-
-        public string WebsiteName { get; set; }
 
         public TimeSpan SyncInterval { get; set; } = TimeSpan.FromDays(1);
 
@@ -24,22 +16,15 @@ namespace Hyprsoft.Cloud.Utilities.Azure
 
         #region Methods
 
-        public bool IsValid()
+        public IEnumerable<string> IsValid()
         {
-            return !String.IsNullOrWhiteSpace(ClientId)
-                && !String.IsNullOrWhiteSpace(ClientSecret)
-                && !String.IsNullOrWhiteSpace(Tenant)
-                && !String.IsNullOrWhiteSpace(SubscriptionId)
-                && !String.IsNullOrWhiteSpace(WebsiteName);
+            return Enumerable.Empty<string>();
         }
 
         public override string ToString()
         {
-            return $"Client Id: '{ClientId}'\n\t" +
-                $"Tenant: '{Tenant}'\n\t" +
-                $"Subscription Id: '{SubscriptionId}'\n\t" +
-                $"Website Name: '{WebsiteName}'\n\t" +
-                $"Sync Interval: '{SyncInterval.TotalHours} hours'";
+            return $"Sync Interval: '{SyncInterval.TotalHours} hours'\n\t" +
+                $"Sync Skew: '{SyncIntervalSkew.TotalMinutes} mins'";
         }
 
         #endregion

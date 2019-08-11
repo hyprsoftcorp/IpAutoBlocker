@@ -1,15 +1,17 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Hyprsoft.Cloud.Utilities.HttpLogs;
+using Hyprsoft.Cloud.Utilities.HttpLogs.Providers;
+using Hyprsoft.Cloud.Utilities.HttpLogs.Stores;
+using Microsoft.Extensions.Logging;
 using System;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Net;
-using System.Threading;
 using System.IO;
-using System.Reflection;
-using Hyprsoft.Cloud.Utilities.HttpLogs;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Net;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 [assembly: InternalsVisibleTo("Hyprsoft.Cloud.Utilities.Tests")]
 namespace Hyprsoft.Cloud.Utilities.Azure
@@ -22,6 +24,7 @@ namespace Hyprsoft.Cloud.Utilities.Azure
 
         private bool _isDisposed;
         private HttpLogProvider _httpLogProvider;
+        private HttpLogStore _httpLogStore;
         private IpRestrictionsProvider _ipRestrictionsProvider;
         private HttpTrafficCache _httpTrafficCache = new HttpTrafficCache();
 
@@ -33,15 +36,17 @@ namespace Hyprsoft.Cloud.Utilities.Azure
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             Settings = settings ?? throw new ArgumentNullException(nameof(settings));
-            if (!Settings.IsValid())
-                throw new ArgumentOutOfRangeException("IP Auto Blocker settings are missing or invalid.");
+            var errors = Settings.IsValid();
+            if (errors.Count() > 0)
+                throw new ArgumentOutOfRangeException($"IP Auto Blocker settings are missing or invalid. {string.Join(" ", errors)}");
 
             var product = (((AssemblyProductAttribute)GetType().Assembly.GetCustomAttribute(typeof(AssemblyProductAttribute))).Product);
             var version = (((AssemblyInformationalVersionAttribute)GetType().Assembly.GetCustomAttribute(typeof(AssemblyInformationalVersionAttribute))).InformationalVersion);
             _logger.LogInformation($"{product} v{version}");
 
             HttpLogProvider = new LocalHttpLogProvider();
-            IpRestrictionsProvider = new AppServiceIpRestrictionsProvider(settings);
+            HttpLogStore = new NoOpHttpLogStore();
+            IpRestrictionsProvider = new NoOpIpRestrictionsProvider();
         }
 
         #endregion
@@ -60,6 +65,16 @@ namespace Hyprsoft.Cloud.Utilities.Azure
             }
         }
 
+        public HttpLogStore HttpLogStore
+        {
+            get { return _httpLogStore; }
+            set
+            {
+                _httpLogStore = value;
+                _httpLogStore.Logger = _logger;
+            }
+        }
+
         public IpRestrictionsProvider IpRestrictionsProvider
         {
             get { return _ipRestrictionsProvider; }
@@ -70,7 +85,7 @@ namespace Hyprsoft.Cloud.Utilities.Azure
             }
         }
 
-        public Expression<Func<IEnumerable<HttpLogEntry>, IEnumerable<HttpLogEntry>>> HttpLogsFilter { get; set; } = entries => entries.Where(entry => entry.Status == HttpStatusCode.NotFound && !entry.Uri.AbsolutePath.EndsWith(".map"));
+        public Expression<Func<IEnumerable<HttpLogEntry>, IEnumerable<HttpLogEntry>>> HttpLogsFilter { get; set; } = entries => entries.Where(entry => entry.Status == HttpStatusCode.NotFound && !entry.Uri.EndsWith(".map"));
 
         public Expression<Func<Dictionary<string, int>, IEnumerable<KeyValuePair<string, int>>>> HttpTrafficCacheFilter { get; set; } = items => items.Where(item => item.Value >= 25);
 
@@ -90,8 +105,8 @@ namespace Hyprsoft.Cloud.Utilities.Azure
 
             _logger.LogInformation($"IP Auto Blocker running using:\n\t" +
                     $"HTTP Log Provider: '{HttpLogProvider.GetType().Name}'\n\t" +
+                    $"HTTP Log Store: '{HttpLogStore.GetType().Name}'\n\t" +
                     $"IP Restrictions Provider: '{IpRestrictionsProvider.GetType().Name}'\n\t" +
-                    $"Azure Web App: '{Settings.WebsiteName}'\n\t" +
                     $"Sync Interval: '{Settings.SyncInterval.TotalHours}' hours (skew: '{Settings.SyncIntervalSkew.TotalMinutes}' minutes)\n\t" +
                     $"HTTP Logs Filter: '{HttpLogsFilter.ToString()}'\n\t" +
                     $"HTTP Traffic Cache Filter: '{HttpTrafficCacheFilter.ToString()}'");
@@ -112,10 +127,13 @@ namespace Hyprsoft.Cloud.Utilities.Azure
             summary.NewHttpLogEntries = entries.Count();
             _logger.LogInformation($"Found '{summary.NewHttpLogEntries}' new HTTP log entries.");
 
+            if (HttpLogStore != null)
+                await HttpLogStore.SaveEntriesAsync(entries, token).ConfigureAwait(false);
+
             await UpdateHttpTrafficCacheAsync(entries);
             summary.HttpTrafficeCache = _httpTrafficCache.Cache.Entries.ToList();
 
-            // If we get to this point we want to delete our logs so they aren't reprocessed later.
+            // If we get to this point we want to delete our logs so they aren't reprocessed again.
             if (Directory.Exists(HttpLogProvider.LocalLogsFolder))
             {
                 _logger.LogInformation($"Removing local HTTP logs folder '{HttpLogProvider.LocalLogsFolder}'.");
@@ -134,11 +152,11 @@ namespace Hyprsoft.Cloud.Utilities.Azure
 
         private Task UpdateHttpTrafficCacheAsync(IEnumerable<HttpLogEntry> entries)
         {
-            var entiresToCache = HttpLogsFilter.Compile().Invoke(entries)
+            var entriesToCache = HttpLogsFilter.Compile().Invoke(entries)
                 .GroupBy(x => x.IpAddress)
                 .Select(x => new { IpAddress = x.Key, Count = x.Count() });
-            _logger.LogInformation($"Updating HTTP traffic cache with '{entiresToCache.Count()}' HTTP log entries.");
-            foreach (var entry in entiresToCache)
+            _logger.LogInformation($"Updating HTTP traffic cache with '{entriesToCache.Count()}' HTTP log entries.");
+            foreach (var entry in entriesToCache)
             {
                 if (!_httpTrafficCache.Cache.Entries.ContainsKey(entry.IpAddress))
                     _httpTrafficCache.Cache.Entries.Add(entry.IpAddress, 0);

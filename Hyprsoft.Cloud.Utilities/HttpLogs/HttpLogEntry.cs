@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.Net;
 
 namespace Hyprsoft.Cloud.Utilities.HttpLogs
@@ -7,36 +8,55 @@ namespace Hyprsoft.Cloud.Utilities.HttpLogs
     {
         #region Properties
 
+        [Required, Key]
+        public int Id { get; set; }
+
+        [Required]
         public DateTime DateTime { get; set; }
 
+        [Required]
         public string SiteName { get; set; }
 
+        [Required]
         public string Method { get; set; }
 
-        public Uri Uri { get; set; }
+        [Required]
+        public string Uri { get; set; }
 
+        [Required]
         public int Port { get; set; }
 
+        [Required]
         public string Username { get; set; }
 
+        [Required]
         public string IpAddress { get; set; }
 
+        [Required]
         public string UserAgent { get; set; }
 
+        [Required]
         public string Cookie { get; set; }
 
+        [Required]
         public string Referer { get; set; }
 
+        [Required]
         public string Host { get; set; }
 
+        [Required]
         public HttpStatusCode Status { get; set; }
 
+        [Required]
         public int SubStatus { get; set; }
 
+        [Required]
         public int BytesReceived { get; set; }
 
+        [Required]
         public int BytesSent { get; set; }
 
+        [Required]
         public TimeSpan Duration { get; set; }
 
         # endregion
@@ -54,7 +74,7 @@ namespace Hyprsoft.Cloud.Utilities.HttpLogs
                 DateTime = DateTime.Parse($"{fields[0]} {fields[1]}"),
                 SiteName = fields[2],
                 Method = fields[3],
-                Uri = new Uri($"{(fields[6] == "443" ? "https://" : "http://")}{fields[12]}{(fields[6] == "80" ? String.Empty : ":" + fields[6])}{fields[4]}{(String.IsNullOrWhiteSpace(fields[5]) ? String.Empty : "?" + fields[5])}".ToLower()),
+                Uri = $"{(fields[6] == "443" ? "https://" : "http://")}{fields[12]}{(fields[6] == "80" ? String.Empty : ":" + fields[6])}{fields[4]}{(String.IsNullOrWhiteSpace(fields[5]) ? String.Empty : "?" + fields[5])}".ToLower(),
                 Port = int.Parse(fields[6]),
                 Username = fields[7],
                 IpAddress = fields[8],

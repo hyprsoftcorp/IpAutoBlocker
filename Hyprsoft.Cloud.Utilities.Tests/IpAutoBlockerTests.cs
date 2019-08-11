@@ -1,5 +1,6 @@
 ﻿using Hyprsoft.Cloud.Utilities.Azure;
-using Hyprsoft.Cloud.Utilities.HttpLogs;
+using Hyprsoft.Cloud.Utilities.HttpLogs.Providers;
+using Hyprsoft.Cloud.Utilities.HttpLogs.Stores;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -33,24 +34,23 @@ namespace Hyprsoft.Cloud.Utilities.Tests
         [TestMethod]
         public async Task CheckDefaultsAndRunWithCustomFilters()
         {
-            using (var blocker = new Azure.IpAutoBlocker(_logger, new IpAutoBlockerSettings
-            {
-                ClientId = "clientid",
-                ClientSecret = "clientsecret",
-                SubscriptionId = Guid.NewGuid().ToString(),
-                Tenant = Guid.NewGuid().ToString(),
-                WebsiteName = "MyWebSite"
-            }))
+            using (var blocker = new Azure.IpAutoBlocker(_logger, new IpAutoBlockerSettings()))
             {
                 // Make sure we start with a fresh cache.
                 await blocker.ClearHttpTrafficCacheAsync();
 
                 // Defaults
                 Assert.AreEqual(typeof(LocalHttpLogProvider), blocker.HttpLogProvider.GetType());
-                Assert.AreEqual(typeof(AppServiceIpRestrictionsProvider), blocker.IpRestrictionsProvider.GetType());
+                Assert.AreEqual(typeof(NoOpHttpLogStore), blocker.HttpLogStore.GetType());
+                Assert.AreEqual(typeof(NoOpIpRestrictionsProvider), blocker.IpRestrictionsProvider.GetType());
 
                 blocker.HttpLogProvider = new UnitTestHttpLogProvider();
                 Assert.IsNotNull(blocker.HttpLogProvider.Logger);
+
+                var httpLogStore = new UnitTestHttpLogStore();
+                blocker.HttpLogStore = httpLogStore;
+                Assert.IsNotNull(blocker.HttpLogStore.Logger);
+                Assert.AreEqual(0, httpLogStore.Entries.Count);
 
                 blocker.IpRestrictionsProvider = new UnitTestIpRestictionsProvider();
                 Assert.IsNotNull(blocker.IpRestrictionsProvider.Logger);
@@ -64,9 +64,10 @@ namespace Hyprsoft.Cloud.Utilities.Tests
                 Assert.AreEqual(blocker.HttpLogsFilter.ToString(), summary.HttpLogsFilter);
                 Assert.AreEqual(blocker.HttpTrafficCacheFilter.ToString(), summary.HttpTrafficCacheFilter);
                 Assert.AreEqual(10, summary.NewHttpLogEntries);
+                Assert.AreEqual(10, httpLogStore.Entries.Count);
 
                 Assert.AreEqual(1, summary.HttpTrafficeCache.Count());
-                Assert.AreEqual(1, summary.HttpTrafficeCache.Where(x => x.Key == "4.4.4.4" && x.Value == 3).Count());
+                Assert.AreEqual(1, summary.HttpTrafficeCache.Where(x => x.Key == "4.4.4.4" && x.Value == 4).Count());
                 Assert.AreEqual(2, summary.Restrictions.Count());
                 Assert.AreEqual(1, summary.Restrictions.Where(x => x.IpAddress == $"1.1.1.1{AppServiceIpRestrictionsProvider.IpAddressCidrBlockSuffix}" && !x.IsNew).Count());
                 Assert.AreEqual(1, summary.Restrictions.Where(x => x.IpAddress == $"2.2.2.2{AppServiceIpRestrictionsProvider.IpAddressCidrBlockSuffix}" && !x.IsNew).Count());
@@ -77,10 +78,11 @@ namespace Hyprsoft.Cloud.Utilities.Tests
                 summary = await blocker.RunAsync();
 
                 Assert.AreEqual(10, summary.NewHttpLogEntries);
+                Assert.AreEqual(20, httpLogStore.Entries.Count);
 
                 Assert.AreEqual(3, summary.HttpTrafficeCache.Count());
                 Assert.AreEqual(1, summary.HttpTrafficeCache.Where(x => x.Key == "3.3.3.3" && x.Value == 3).Count());
-                Assert.AreEqual(1, summary.HttpTrafficeCache.Where(x => x.Key == "4.4.4.4" && x.Value == 3).Count());
+                Assert.AreEqual(1, summary.HttpTrafficeCache.Where(x => x.Key == "4.4.4.4" && x.Value == 4).Count());
                 Assert.AreEqual(1, summary.HttpTrafficeCache.Where(x => x.Key == "5.5.5.5" && x.Value == 3).Count());
                 Assert.AreEqual(6, summary.Restrictions.Count());
 
@@ -98,16 +100,8 @@ namespace Hyprsoft.Cloud.Utilities.Tests
         [TestMethod]
         public void BadCtor()
         {
-            Assert.ThrowsException<ArgumentNullException>(() => new Azure.IpAutoBlocker(null, new IpAutoBlockerSettings
-            {
-                ClientId = "clientid",
-                ClientSecret = "clientsecret",
-                SubscriptionId = Guid.NewGuid().ToString(),
-                Tenant = Guid.NewGuid().ToString(),
-                WebsiteName = "MyWebSite"
-            }));
+            Assert.ThrowsException<ArgumentNullException>(() => new Azure.IpAutoBlocker(null, new IpAutoBlockerSettings()));
             Assert.ThrowsException<ArgumentNullException>(() => new Azure.IpAutoBlocker(_logger, null));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new Azure.IpAutoBlocker(_logger, new IpAutoBlockerSettings()));
         }
 
         #endregion

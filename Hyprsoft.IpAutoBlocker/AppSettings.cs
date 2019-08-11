@@ -1,5 +1,6 @@
 ﻿using Hyprsoft.Cloud.Utilities.Azure;
-using Hyprsoft.Cloud.Utilities.HttpLogs;
+using Hyprsoft.Cloud.Utilities.HttpLogs.Providers;
+using Hyprsoft.Cloud.Utilities.HttpLogs.Stores;
 using System;
 
 namespace Hyprsoft.IpAutoBlocker
@@ -12,6 +13,6 @@ namespace Hyprsoft.IpAutoBlocker
 
         public IpAutoBlockerSettings IpAutoBlockerSettings { get; set; } = new IpAutoBlockerSettings();
 
-        public FtpHttpLogProviderSettings FtpHttpLogProviderSettings { get; set; } = new FtpHttpLogProviderSettings();
+        public SqlServerHttpLogStoreSettings SqlServerHttpLogStoreSettings { get; set; } = new SqlServerHttpLogStoreSettings();
     }
 }
