@@ -43,13 +43,13 @@ namespace Hyprsoft.Cloud.Utilities.HttpLogs.Providers
 
         #region Methods
 
-        public Task<IEnumerable<HttpLogEntry>> GetEntriesAsync(CancellationToken cancellationToken = default(CancellationToken))
+        public Task<IEnumerable<HttpLogEntry>> GetEntriesAsync(CancellationToken cancellationToken = default)
         {
             Logger?.LogInformation("Retrieving new HTTP traffic logs.");
             return OnGetEntriesAsync(cancellationToken);
         }
 
-        protected abstract Task<IEnumerable<HttpLogEntry>> OnGetEntriesAsync(CancellationToken CancellationToken = default(CancellationToken));
+        protected abstract Task<IEnumerable<HttpLogEntry>> OnGetEntriesAsync(CancellationToken CancellationToken = default);
 
         public override string ToString()
         {

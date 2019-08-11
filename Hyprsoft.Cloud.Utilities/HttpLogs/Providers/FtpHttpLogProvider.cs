@@ -31,7 +31,7 @@ namespace Hyprsoft.Cloud.Utilities.HttpLogs.Providers
 
         #region Methods
 
-        protected override async Task<IEnumerable<HttpLogEntry>> OnGetEntriesAsync(CancellationToken cancellationToken = default(CancellationToken))
+        protected override async Task<IEnumerable<HttpLogEntry>> OnGetEntriesAsync(CancellationToken cancellationToken = default)
         {
             // This FtpClient doesn't work on on Linux :-(
             // https://github.com/robinrodricks/FluentFTP/issues/347

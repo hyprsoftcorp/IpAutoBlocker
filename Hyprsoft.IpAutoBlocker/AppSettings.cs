@@ -1,5 +1,4 @@
 ﻿using Hyprsoft.Cloud.Utilities.Azure;
-using Hyprsoft.Cloud.Utilities.HttpLogs.Providers;
 using Hyprsoft.Cloud.Utilities.HttpLogs.Stores;
 using System;
 

@@ -27,7 +27,7 @@ namespace Hyprsoft.Cloud.Utilities.Azure
 
         #region Methods
 
-        public Task InitializeAsync(CancellationToken cancellationToken = default(CancellationToken))
+        public Task InitializeAsync(CancellationToken cancellationToken = default)
         {
             if (IsInitialized)
                 throw new InvalidOperationException("This provider is already initialized.");
@@ -37,7 +37,7 @@ namespace Hyprsoft.Cloud.Utilities.Azure
             return OnInitializeAsync(cancellationToken);
         }
 
-        public Task LoadAsync(CancellationToken cancellationToken = default(CancellationToken))
+        public Task LoadAsync(CancellationToken cancellationToken = default)
         {
             if (!IsInitialized)
                 throw new InvalidOperationException($"This provider has not been initialized.  Please call '{nameof(InitializeAsync)}()'.");
@@ -47,7 +47,7 @@ namespace Hyprsoft.Cloud.Utilities.Azure
             return OnLoadAsync(cancellationToken);
         }
 
-        public Task SaveAsync(CancellationToken cancellationToken = default(CancellationToken))
+        public Task SaveAsync(CancellationToken cancellationToken = default)
         {
             if (!IsInitialized)
                 throw new InvalidOperationException($"This provider has not been initialized.  Please call '{nameof(InitializeAsync)}()'.");

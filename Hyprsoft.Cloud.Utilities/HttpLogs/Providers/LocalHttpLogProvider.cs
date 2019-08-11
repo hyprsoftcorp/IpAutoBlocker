@@ -11,7 +11,7 @@ namespace Hyprsoft.Cloud.Utilities.HttpLogs.Providers
     {
         #region Methods
 
-        protected override Task<IEnumerable<HttpLogEntry>> OnGetEntriesAsync(CancellationToken cancellationToken = default(CancellationToken))
+        protected override Task<IEnumerable<HttpLogEntry>> OnGetEntriesAsync(CancellationToken cancellationToken = default)
         {
             // TODO: Implement yield return.
             var entries = new List<HttpLogEntry>();

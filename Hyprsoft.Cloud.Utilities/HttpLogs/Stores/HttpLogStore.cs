@@ -16,7 +16,7 @@ namespace Hyprsoft.Cloud.Utilities.HttpLogs.Stores
 
         #region Methods
 
-        public Task SaveEntriesAsync(IEnumerable<HttpLogEntry> entries, CancellationToken cancellationToken = default(CancellationToken))
+        public Task SaveEntriesAsync(IEnumerable<HttpLogEntry> entries, CancellationToken cancellationToken = default)
         {
             var count = entries != null ? entries.Count() : 0;
             Logger?.LogInformation($"Saving '{count}' new HTTP log entries.");
@@ -24,7 +24,7 @@ namespace Hyprsoft.Cloud.Utilities.HttpLogs.Stores
             return count > 0 ? OnSaveEntriesAsync(entries, cancellationToken) : Task.CompletedTask;
         }
 
-        protected abstract Task OnSaveEntriesAsync(IEnumerable<HttpLogEntry> entries, CancellationToken cancellationToken = default(CancellationToken));
+        protected abstract Task OnSaveEntriesAsync(IEnumerable<HttpLogEntry> entries, CancellationToken cancellationToken = default);
 
         #endregion
     }

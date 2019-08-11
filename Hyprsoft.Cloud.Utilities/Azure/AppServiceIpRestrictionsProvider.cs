@@ -38,7 +38,7 @@ namespace Hyprsoft.Cloud.Utilities.Azure
 
         public const string IpAddressCidrBlockSuffix = "/32";
 
-        public AppServiceIpRestrictionsProviderSettings Settings { get; }        
+        public AppServiceIpRestrictionsProviderSettings Settings { get; }
 
         #endregion
 
@@ -56,12 +56,14 @@ namespace Hyprsoft.Cloud.Utilities.Azure
                 { "resource", "https://management.core.windows.net/" },
                 { "grant_type", "client_credentials" }
             };
-            var response = await _httpClient.PostAsync($"https://login.microsoftonline.com/{Settings.Tenant}/oauth2/token", new FormUrlEncodedContent(form), cancellationToken).ConfigureAwait(false);
-            if (!response.IsSuccessStatusCode)
-                throw new Exception($"Authentication failed with status '{response.ReasonPhrase}'.  Details: {await response.Content.ReadAsStringAsync().ConfigureAwait(false) ?? "none"}");
-            var auth = JsonConvert.DeserializeAnonymousType(await response.Content.ReadAsStringAsync().ConfigureAwait(false), new { access_token = "" });
+            using (var response = await _httpClient.PostAsync($"https://login.microsoftonline.com/{Settings.Tenant}/oauth2/token", new FormUrlEncodedContent(form), cancellationToken).ConfigureAwait(false))
+            {
+                if (!response.IsSuccessStatusCode)
+                    throw new Exception($"Authentication failed with status '{response.ReasonPhrase}'.  Details: {await response.Content.ReadAsStringAsync().ConfigureAwait(false) ?? "none"}");
 
-            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", auth.access_token);
+                var auth = JsonConvert.DeserializeAnonymousType(await response.Content.ReadAsStringAsync().ConfigureAwait(false), new { access_token = "" });
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", auth.access_token);
+            }   // using http client response.
 
             await base.OnInitializeAsync(cancellationToken);
         }
@@ -71,25 +73,31 @@ namespace Hyprsoft.Cloud.Utilities.Azure
             Logger.LogInformation($"Getting web apps for subscription '{Settings.SubscriptionId}'.");
 
             // Get our website's resource id.
-            var response = await _httpClient.GetAsync($"https://management.azure.com/subscriptions/{Settings.SubscriptionId}/providers/Microsoft.Web/sites?api-version={AzureApiVersion}", cancellationToken).ConfigureAwait(false);
-            if (!response.IsSuccessStatusCode)
-                throw new Exception($"Getting website's resource id failed with status '{response.ReasonPhrase}'.  Details: {await response.Content.ReadAsStringAsync().ConfigureAwait(false) ?? "none"}");
-            var webAppsList = JsonConvert.DeserializeObject<WebAppsList>(await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+            string webSiteResourceId = null;
+            using (var response = await _httpClient.GetAsync($"https://management.azure.com/subscriptions/{Settings.SubscriptionId}/providers/Microsoft.Web/sites?api-version={AzureApiVersion}", cancellationToken).ConfigureAwait(false))
+            {
+                if (!response.IsSuccessStatusCode)
+                    throw new Exception($"Getting website's resource id failed with status '{response.ReasonPhrase}'.  Details: {await response.Content.ReadAsStringAsync().ConfigureAwait(false) ?? "none"}");
+                var webAppsList = JsonConvert.DeserializeObject<WebAppsList>(await response.Content.ReadAsStringAsync().ConfigureAwait(false));
 
-            Logger.LogInformation($"Getting IP restrictions for '{Settings.WebsiteName}'.");
-            var webSiteResourceId = webAppsList.WebApps.FirstOrDefault(w => String.Compare(w.Name, Settings.WebsiteName, true) == 0)?.Id;
+                Logger.LogInformation($"Getting IP restrictions for '{Settings.WebsiteName}'.");
+                webSiteResourceId = webAppsList.WebApps.FirstOrDefault(w => String.Compare(w.Name, Settings.WebsiteName, true) == 0)?.Id;
+            }   // using http client response.
+
             if (webSiteResourceId == null)
                 throw new InvalidOperationException($"The '{Settings.WebsiteName}' website was not found in Azure subscription '{Settings.SubscriptionId}'.");
 
             // Get our website's ip restrictions.
-            response = await _httpClient.GetAsync($"https://management.azure.com/{webSiteResourceId}/config/web?api-version={AzureApiVersion}", cancellationToken).ConfigureAwait(false);
-            if (!response.IsSuccessStatusCode)
-                throw new Exception($"Getting IP restrictions failed with status 'response.ReasonPhrase'.  Details: {await response.Content.ReadAsStringAsync().ConfigureAwait(false) ?? "none"}");
+            using (var response = await _httpClient.GetAsync($"https://management.azure.com/{webSiteResourceId}/config/web?api-version={AzureApiVersion}", cancellationToken).ConfigureAwait(false))
+            {
+                if (!response.IsSuccessStatusCode)
+                    throw new Exception($"Getting IP restrictions failed with status 'response.ReasonPhrase'.  Details: {await response.Content.ReadAsStringAsync().ConfigureAwait(false) ?? "none"}");
 
-            _webAppConfiguration = JsonConvert.DeserializeObject<WebApp>(await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                _webAppConfiguration = JsonConvert.DeserializeObject<WebApp>(await response.Content.ReadAsStringAsync().ConfigureAwait(false));
 
-            Restrictions.Clear();
-            Restrictions.AddRange(_webAppConfiguration.Properties.Restrictions);
+                Restrictions.Clear();
+                Restrictions.AddRange(_webAppConfiguration.Properties.Restrictions);
+            }   // using http client response.
         }
 
         protected async override Task OnSaveAsync(CancellationToken cancellationToken)
@@ -97,10 +105,12 @@ namespace Hyprsoft.Cloud.Utilities.Azure
             _webAppConfiguration.Properties.Restrictions.Clear();
             _webAppConfiguration.Properties.Restrictions.AddRange(Restrictions);
 
-            var response = await _httpClient.PutAsync($"https://management.azure.com/{_webAppConfiguration.Id}?api-version={AzureApiVersion}",
-                new StringContent(JsonConvert.SerializeObject(_webAppConfiguration), Encoding.UTF8, "application/json"), cancellationToken).ConfigureAwait(false);
-            if (!response.IsSuccessStatusCode)
-                throw new Exception($"Submitting IP restrictions failed with status '{response.ReasonPhrase}'.  Details: {await response.Content.ReadAsStringAsync().ConfigureAwait(false) ?? "none"}");
+            using (var response = await _httpClient.PutAsync($"https://management.azure.com/{_webAppConfiguration.Id}?api-version={AzureApiVersion}",
+                new StringContent(JsonConvert.SerializeObject(_webAppConfiguration), Encoding.UTF8, "application/json"), cancellationToken).ConfigureAwait(false))
+            {
+                if (!response.IsSuccessStatusCode)
+                    throw new Exception($"Submitting IP restrictions failed with status '{response.ReasonPhrase}'.  Details: {await response.Content.ReadAsStringAsync().ConfigureAwait(false) ?? "none"}");
+            }   // using http client response.
         }
 
         #endregion

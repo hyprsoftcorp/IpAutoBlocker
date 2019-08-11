@@ -26,7 +26,7 @@ namespace Hyprsoft.Cloud.Utilities.Azure
         private HttpLogProvider _httpLogProvider;
         private HttpLogStore _httpLogStore;
         private IpRestrictionsProvider _ipRestrictionsProvider;
-        private HttpTrafficCache _httpTrafficCache = new HttpTrafficCache();
+        private readonly HttpTrafficCache _httpTrafficCache = new HttpTrafficCache();
 
         #endregion
 
@@ -93,7 +93,7 @@ namespace Hyprsoft.Cloud.Utilities.Azure
 
         #region Methods
 
-        public async Task<IpAutoBlockerSummary> RunAsync(CancellationToken token = default(CancellationToken))
+        public async Task<IpAutoBlockerSummary> RunAsync(CancellationToken token = default)
         {
             var summary = new IpAutoBlockerSummary
             {

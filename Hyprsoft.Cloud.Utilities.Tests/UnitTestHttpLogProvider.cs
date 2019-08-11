@@ -39,7 +39,7 @@ namespace Hyprsoft.Cloud.Utilities.Tests
 
         #region Methods
 
-        protected override Task<IEnumerable<HttpLogEntry>> OnGetEntriesAsync(CancellationToken CancellationToken = default(CancellationToken))
+        protected override Task<IEnumerable<HttpLogEntry>> OnGetEntriesAsync(CancellationToken CancellationToken = default)
         {
             return Task.FromResult((IEnumerable<HttpLogEntry>)Entries);
         }
