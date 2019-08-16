@@ -14,10 +14,10 @@ namespace Hyprsoft.Cloud.Utilities.HttpLogs
         [Required]
         public DateTime DateTime { get; set; }
 
-        [Required]
+        [Required, MaxLength(50)]
         public string SiteName { get; set; }
 
-        [Required]
+        [Required, MaxLength(10)]
         public string Method { get; set; }
 
         [Required]
@@ -26,10 +26,10 @@ namespace Hyprsoft.Cloud.Utilities.HttpLogs
         [Required]
         public int Port { get; set; }
 
-        [Required]
+        [Required, MaxLength(50)]
         public string Username { get; set; }
 
-        [Required]
+        [Required, MaxLength(15)]
         public string IpAddress { get; set; }
 
         [Required]
@@ -41,7 +41,7 @@ namespace Hyprsoft.Cloud.Utilities.HttpLogs
         [Required]
         public string Referer { get; set; }
 
-        [Required]
+        [Required, MaxLength(50)]
         public string Host { get; set; }
 
         [Required]
